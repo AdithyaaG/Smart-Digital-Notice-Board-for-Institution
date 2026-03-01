@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notices | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="../../css/student_feed.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="admin-body">
+
+    <header class="admin-header">
+        <img src="../../assets/logo.png" alt="Logo">
+        <div class="header-text">
+            <h2>SR-Notify</h2>
+            <p>Student home</p>
+        </div>
+    </header>
+
+
+    <main class="admin-content">
+   <h2>Official</h2>
+    <div class="notification-card official-card" onclick="location.href='student_admincn.html'">
+    <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+    <div class="card-text">
+        <p style="font-size: 20px; font-weight: bold;">Official Notice</p>
+        <span id="admin-reminder">  </span> </div>
+    <div class="bell-container">
+        <i class="fas fa-bell notification-bell"></i>
+        <span class="badge" id="admin-count" style="display: none;">0</span> </div>
+</div>
+
+       <h2>Department</h2>
+
+<div class="notification-card dept-card" onclick="location.href='student_depcn.html'">
+    <div class="card-icon"><i class="fas fa-university"></i></div>
+    <div class="card-text">
+        <p style="font-size: 20px; font-weight: bold;">Department Notice</p>
+        <span id="dept-reminder">   </span> </div>
+    <div class="bell-container">
+        <i class="fas fa-bell notification-bell"></i>
+        <span class="badge" id="dept-count" style="display: none;">0</span> </div>
+</div>
+</main>
+
+    <div id="notice-container">
+    </div>
+
+<!--<script type="module" src="../../js/feed_script.js"></script>
+-->
+<script>
+    const userName = localStorage.getItem("userName");
+    const welcomeElement = document.getElementById("welcome-text");
+
+    if (userName && welcomeElement) {
+        welcomeElement.innerText = `Welcome, ${userName}`;
+    }
+</script>
+
+    <nav class="bottom-nav">
+        <a href="student_profile.html" class="nav-item"><i class="fas fa-user"></i></a>
+        <a href="student_home.html" class="nav-item active"><i class="fas fa-home"></i></a>
+        <a href="student_notices.html" class="nav-item"><i class="fas fa-history"></i></a>
+    </nav>
+<div id="notice-container">
+    </div>
+
+<!--<script type="module" src="../../js/student_feed.js"></script>
+<script type="module" src="../../js/home_feed.js"></script>-->
+</body>
+</html>

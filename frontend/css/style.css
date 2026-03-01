@@ -1,0 +1,224 @@
+/* General Reset */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+    font-family: 'Arial', sans-serif;
+    overflow: hidden; /* Prevents scrollbars on splash screen */
+}
+
+/* Splash Container - Matching the Screenshot Gradient */
+.splash-container {
+    height: 100vh;
+    width: 100vw;
+    background: linear-gradient(180deg, #667eea 0%, #1a237e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Layout for Logo and Text */
+.content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between logo and text */
+    animation: fadeIn 1.2s ease-out;
+}
+
+.logo {
+    width: 350px; /* Adjust based on your actual logo dimensions */
+    height: auto;
+}
+
+/* Text Styling */
+.college-text-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.name-top {
+    color: #004d26; /* Deep Green Institutional Color */
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+}
+
+.name-bottom {
+    color: #004d26;
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+}
+
+/* Smooth Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* login card starts here*/
+
+/* Login Card Container */
+.login-container {
+    height: 100vh;
+    width: 100vw;
+    background: linear-gradient(180deg, #e91e63 0%, #880e4f 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* The White Login Card */
+.login-card {
+    background-color: white;
+    padding: 40px 30px;
+    width: 85%;
+    max-width: 350px;
+    text-align: center;
+    border-radius: 4px; /* Matches the sharp-edged look in your screenshot */
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.login-card h1 {
+    font-family: 'Times New Roman', serif; /* Matching the 'welcome' font style */
+    font-size: 2.5rem;
+    font-weight: normal;
+    margin-bottom: 0;
+    color: #333;
+}
+
+.login-card p {
+    font-size: 1.1rem;
+    margin: 5px 0;
+    color: #555;
+}
+
+.app-name {
+    font-weight: bold;
+    font-size: 1.4rem;
+    display: block;
+    margin-bottom: 25px;
+}
+
+/* The Blue Login Button */
+.btn-login {
+    background: linear-gradient(180deg, #e91e63 0%, #880e4f 100%);
+    color: white;
+    border: 1px solid #0084b4;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    transition: background 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-login:hover {
+    background-color: #0084b4;
+}
+
+
+/*user role selection starts here*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(180deg, #e91e63 0%, #880e4f 100%);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Container and Card */
+.login-container {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.login-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Typography */
+h1 {
+    font-size: 2rem;
+    color: #333;
+    text-transform: capitalize;
+    margin-bottom: 5px;
+}
+
+p {
+    color: #777;
+    font-size: 1rem;
+}
+
+.app-name {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #764ba2;
+    margin-bottom: 30px;
+}
+
+/* Button Layout */
+.role-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-role {
+    text-decoration: none;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 12px;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Hover Effects */
+.btn-role:hover {
+    background-color: #764ba2;
+    color: #fff;
+    border-color: #764ba2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(118, 75, 162, 0.3);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+    }
+}
+

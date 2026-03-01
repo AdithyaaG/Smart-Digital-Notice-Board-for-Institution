@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Notice | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-post {
+            background-color: white;
+            color: #b3004b;
+            border: none;
+            padding: 5px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        
+        .post-settings-wrapper {
+            padding: 15px 20px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #b3004b;
+            text-transform: uppercase;
+        }
+
+        .priority-select, .datetime-input, .title-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+        }
+
+        .title-input {
+            border-left: 5px solid #b3004b;
+            font-weight: bold;
+            background-color: white;
+        }
+
+        .datetime-input:focus, .priority-select:focus {
+            border-color: #b3004b;
+            background-color: #fff;
+        }
+
+        .post-container {
+            padding: 20px;
+            height: calc(100vh - 400px); /* Adjusted for extra input */
+        }
+
+        .notice-textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-size: 1rem;
+            outline: none;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <header class="admin-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="../../assets/logo.png" alt="SR-Notify Logo" id="header-logo" style="height: 50px;">
+            <div class="header-text">
+                <h2 style="margin: 0; color: white;">SR-Notify</h2>
+                <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Admin Dashboard</p>
+            </div>
+        </div>
+        
+        <button class="btn-post" onclick="publishDeptNotice()">POST</button> 
+
+        <a href="admin_profile.html" class="top-profile-link" style="text-decoration: none;">
+            <div id="profile-container" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2);">
+                <img id="user-header-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                <i id="user-header-icon" class="fas fa-user-circle" style="font-size: 2rem; color: white;"></i>
+            </div>
+        </a>
+    </header>
+
+    <div class="post-settings-wrapper">
+        <div class="input-group">
+            <label>Notice Title</label>
+            <input type="text" id="noticeTitle" class="title-input" placeholder="e.g. Semester Results Out">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex: 1;">
+                <label>Priority Level</label>
+                <select id="noticePriority" class="priority-select">
+                    <option value="normal">General Announcement</option>
+                    <option value="important">Important (Exams/Fees)</option>
+                    <option value="emergency">Emergency (Admin Only)</option>
+                    <option value="event">Campus Event</option>
+                </select>
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label style="color: #ff9800;"><i class="fas fa-calendar-day"></i> Event Date</label>
+                <input type="date" id="eventDate" class="datetime-input" style="border-left: 4px solid #ff9800;">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label><i class="fas fa-clock"></i> Auto-Hide Expiry</label>
+            <input type="datetime-local" id="expiryDateTime" class="datetime-input">
+        </div>
+    </div>
+
+    <main class="post-container">
+        <textarea class="notice-textarea" id="noticeContent" placeholder="Write your announcement details here..."></textarea>
+        <div id="filePreview" style="margin-top: 10px; font-size: 0.85rem; color: #b3004b; font-weight: bold;"></div>
+        
+        <div style="margin-top: 20px;">
+            <label style="display:block; font-weight:bold; color:#b3004b; margin-bottom:5px;">Attachment (Image, Video, or Doc)</label>
+            <input type="file" id="file-input" style="width:100%; padding:10px; border:2px dashed #ccc; border-radius:10px;">
+            <div id="upload-progress" style="display:none; margin-top:10px;">
+                <div style="width:100%; background:#eee; border-radius:10px; height:10px;">
+                    <div id="progress-bar" style="width:0%; background:#b3004b; height:100%; border-radius:10px; transition: width 0.3s;"></div>
+                </div>
+                <small id="status-text" style="color:#666;">Uploading... 0%</small>
+            </div>
+        </div>
+    </main>
+
+    <input type="file" id="docInput" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt">
+    <input type="file" id="videoInput" hidden accept="video/*">
+    <input type="file" id="imageInput" hidden accept="image/*">
+
+    <div class="fab-container">
+        <div class="attachment-menu" id="attachmentMenu">
+            <i class="fas fa-file-alt" title="Add Document" id="docIcon"></i>
+            <i class="fas fa-video" title="Add Video" id="videoIcon"></i>
+            <i class="fas fa-image" title="Add Image" id="imageIcon"></i>
+        </div>
+        <i class="fas fa-plus btn-add-main" id="mainAddBtn"></i>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="admin_dept_manage.html" class="nav-item"><i class="fas fa-tasks"></i></a>
+        <a href="admin_home.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="admin_cn.html" class="nav-item active"><i class="fas fa-plus-square"></i></a>
+        <a href="admin_notice.html" class="nav-item"><i class="fas fa-clipboard-list"></i></a>
+    </nav>
+
+    <script type="module" src="../../js/dept_post.js"></script>
+    <script type="module" src="../../js/profile_handler.js"></script>
+</body>
+</html>

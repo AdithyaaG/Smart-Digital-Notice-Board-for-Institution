@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Notice | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a237e;
+            --bg-light: #f4f7f6;
+            --text-main: #333;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        body {
+            background-color: var(--bg-light);
+            margin: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        /* --- Elegant Header --- */
+        .admin-header {
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .btn-post {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* --- Refined Settings Area --- */
+        .settings-container {
+            background: white;
+            margin: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-box label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .minimal-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            background: #fdfdfd;
+            font-size: 0.95rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        /* --- The "Paper" Textarea Area --- */
+        .main-card {
+            background: white;
+            margin: 15px;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .heading-area {
+            padding: 20px 25px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .title-field {
+            width: 100%;
+            border: none;
+            font-size: 1.4rem;
+            font-weight: 700;
+            outline: none;
+            color: var(--text-main);
+        }
+
+        .content-area {
+            padding: 20px 25px;
+            min-height: 350px;
+        }
+
+        .notice-textarea {
+            width: 100%;
+            height: 300px;
+            border: none;
+            resize: none;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            outline: none;
+            color: #555;
+            font-family: 'Courier New', Courier, monospace; /* For that document feel */
+        }
+
+        /* --- Conditional Display --- */
+        #eventDateGroup {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Floating Attachment Button --- */
+        .attachment-fab {
+            position: fixed;
+            right: 25px;
+            bottom: 100px;
+            background: #2d3e91; /* Matches your reference image blue */
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 999;
+        }
+
+        .bottom-nav-spacer { height: 90px; }
+    </style>
+</head>
+<body>
+
+    <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="../../assets/logo.png" alt="Logo" style="height: 40px;">
+            <h2 style="margin: 0; font-size: 1.1rem; letter-spacing: 0.5px;">SR-Notify</h2>
+        </div>
+        <button class="btn-post" onclick="publishNotice()">POST</button>
+    </header>
+
+    <div class="settings-container">
+        <div class="input-box">
+            <label>Category</label>
+            <select id="noticePriority" class="minimal-input" onchange="checkEventType()">
+                <option value="normal">📌 General Announcement</option>
+                <option value="important">🚨 Important (Exams/Fees)</option>
+                <option value="emergency">⚠️ Emergency Alert</option>
+                <option value="event">📅 Campus Event</option>
+            </select>
+        </div>
+
+        <div id="eventDateGroup" class="input-box">
+            <label>Event Date</label>
+            <input type="date" id="eventDate" class="minimal-input">
+        </div>
+
+        <div class="input-box">
+            <label>Auto-Archive Date</label>
+            <input type="datetime-local" id="expiryDateTime" class="minimal-input">
+        </div>
+    </div>
+
+    <div class="main-card">
+        <div class="heading-area">
+            <input type="text" id="noticeTitle" class="title-field" placeholder="Notice Heading...">
+        </div>
+        <div class="content-area">
+            <textarea class="notice-textarea" id="noticeContent" placeholder="Write the details here..."></textarea>
+        </div>
+    </div>
+
+    <label for="file-input" class="attachment-fab">
+        <i class="fas fa-paperclip"></i>
+    </label>
+    <input type="file" id="file-input" hidden>
+
+    <div class="bottom-nav-spacer"></div>
+
+    <nav class="bottom-nav">
+        <a href="admin_dept_manage.html" class="nav-item"><i class="fas fa-tasks"></i></a>
+        <a href="admin_home.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="admin_cn.html" class="nav-item active"><i class="fas fa-plus-square"></i></a>
+        <a href="admin_notice.html" class="nav-item"><i class="fas fa-clipboard-list"></i></a>
+    </nav>
+
+    <script>
+        function checkEventType() {
+            const select = document.getElementById('noticePriority');
+            const dateGroup = document.getElementById('eventDateGroup');
+            dateGroup.style.display = (select.value === 'event') ? 'flex' : 'none';
+        }
+
+        // Initialize on load
+        window.onload = checkEventType;
+    </script>
+    <script type="module" src="../../js/post_script.js"></script>
+    <script type="module" src="../../js/profile_handler.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #1a237e; }
+        .student-card { 
+            display: flex; 
+            align-items: center; 
+            padding: 15px; 
+            background: white; 
+            border-radius: 12px; 
+            margin-bottom: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        .avatar {
+            width: 45px; height: 45px; border-radius: 50%; 
+            background: #fdf2f6; color: var(--primary); 
+            display: flex; align-items: center; justify-content: center; 
+            margin-right: 15px; font-weight: bold; font-size: 1.2rem;
+        }
+        .batch-header {
+            background: var(--primary); color: white; padding: 30px 20px;
+            border-radius: 0 0 25px 25px; text-align: center; margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <div class="batch-header">
+        <h2 id="batch-name" style="margin:0;">Classroom</h2>
+        <p id="range-display" style="margin:5px 0 0; opacity:0.9; font-size:0.9rem;">Loading your specific student range...</p>
+    </div>
+
+    <main style="padding: 0 20px 100px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="color:var(--primary); margin:0;">Assigned Students</h3>
+            <span id="enrolled-count" style="background:var(--primary); color:white; padding:4px 12px; border-radius:15px; font-size:0.8rem; font-weight:bold;">0 Enrolled</span>
+        </div>
+
+        <div id="student-list">
+            <div style="text-align:center; margin-top:50px; color:#aaa;">
+                <i class="fas fa-users-slash" style="font-size:3rem; display:block; margin-bottom:10px;"></i>
+                <p>Fetching your classroom data...</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+    import { db } from '../../js/firebase-config.js';
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    async function initClassroom() {
+        const rangeText = document.getElementById('range-display');
+        const listDiv = document.getElementById('student-list');
+        const enrolledCount = document.getElementById('enrolled-count');
+        const staffName = localStorage.getItem("userName"); 
+
+        if (!staffName) {
+            rangeText.innerText = "Error: Staff Name not found.";
+            return;
+        }
+
+        try {
+            // 1. Fetch Batch
+            const batchQuery = query(collection(db, "batches"), where("controller_name", "==", staffName));
+            const batchSnap = await getDocs(batchQuery);
+
+            if (batchSnap.empty) {
+                rangeText.innerText = "No Batch Assigned to " + staffName;
+                return;
+            }
+
+            const batchData = batchSnap.docs[0].data();
+            const startNum = Number(batchData.start_reg);
+            const endNum = Number(batchData.end_reg);
+            
+            rangeText.innerText = `Range: ${startNum} - ${endNum}`;
+
+            // 2. Fetch ALL students and filter in JavaScript
+            // This bypasses data-type mismatches and index requirements in one go!
+            const allStudentsSnap = await getDocs(collection(db, "students"));
+            
+            const studentList = [];
+            allStudentsSnap.forEach(doc => {
+                const s = doc.data();
+                // Check all possible field names you might have used
+                const sId = Number(s.studentId || s.regNo || s.rollNo || s.studentID);
+                
+                if (sId >= startNum && sId <= endNum) {
+                    studentList.push({ ...s, actualId: sId });
+                }
+            });
+
+            // 3. Sort numerically
+            studentList.sort((a, b) => a.actualId - b.actualId);
+
+            // 4. Update UI
+            enrolledCount.innerText = `${studentList.length} Enrolled`;
+
+            if (studentList.length === 0) {
+                listDiv.innerHTML = `
+                    <div style="text-align:center; padding:20px; color: #666;">
+                        <p>No students found in range ${startNum} - ${endNum}.</p>
+                        <p style="font-size:0.8rem;">Checked ${allStudentsSnap.size} total students in database.</p>
+                    </div>`;
+            } else {
+                listDiv.innerHTML = studentList.map(s => `
+                    <div class="student-card" style="display:flex; align-items:center; padding:12px; background:white; border-radius:12px; margin-bottom:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <div class="avatar" style="width:35px; height:35px; border-radius:50%; background:#fdf2f6; color:#b3004b; display:flex; align-items:center; justify-content:center; margin-right:12px; font-weight:bold;">
+                            ${s.name ? s.name.charAt(0) : '?'}
+                        </div>
+                        <div>
+                            <div style="font-weight:bold; color:#333; font-size:0.9rem;">${s.name}</div>
+                            <div style="font-size:0.75rem; color:#888;">ID: ${s.studentId || s.regNo || s.rollNo}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+        } catch (error) {
+            console.error("Classroom Error:", error);
+            rangeText.innerText = "Error: " + error.message;
+        }
+    }
+
+    initClassroom();
+</script>
+    <script type="module" src="../../js/profile_handler.js"></script>
+
+    <nav class="bottom-nav">
+        <a href="staff_clsrom.html" class="nav-item"><i class="fas fa-chalkboard-teacher"></i></a>        
+        <a href="staff_home.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="staff_cn.html" class="nav-item"><i class="fas fa-plus-square"></i></a>
+        <a href="staff_notice.html" class="nav-item"><i class="fas fa-clipboard-list"></i></a>
+    </nav>
+</body>
+</html>

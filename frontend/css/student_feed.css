@@ -1,0 +1,86 @@
+/* Updated Notification Cards */
+.notification-card {
+    display: flex;
+    align-items: center;
+    padding: 24px;
+    border-radius: 16px; /* Slightly softer corners */
+    margin-bottom: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #ffffff; /* Clean white background */
+    border: 1px solid rgba(0,0,0,0.05); /* Very subtle border */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06); /* Soft, professional shadow */
+}
+
+/* Hover effect for better UX */
+.notification-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Side Color Accents */
+.official-card {
+    border-left: 8px solid #b3004b; /* Matches your header maroon */
+}
+
+.dept-card {
+    border-left: 8px solid #00a86b; /* A professional Jade Green for contrast */
+}
+
+/* Icon Styling */
+.card-icon i {
+    font-size: 2.5rem;
+    margin-right: 20px;
+    color: #333; /* Darker for better contrast */
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+/* Specific Icon Colors to match the borders */
+.official-card .card-icon i { color: #b3004b; background: #fff0f5; }
+.dept-card .card-icon i { color: #00a86b; background: #e8f5e9; }
+
+/* Text color overrides */
+.notification-card h3 {
+    color: #222;
+    margin-bottom: px;
+    font-weight: 700;
+}
+
+.notification-card p {
+    color: #666;
+    margin: 0;
+}
+
+.notification-bell {
+    color: #dd1b1b; 
+}
+
+/* Ensure the bell is pinned to the top right */
+.notification-bell, .bell-container {
+    position: absolute;
+    top: 12px;    /* Distance from top edge */
+    right: 12px;  /* Distance from right edge */
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Adjusting the badge so it stays relative to the bell */
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff0000;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
+}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dept Notices | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="../../css/student_feed.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .notice-card:hover {
+            transform: translateY(-2px);
+            background-color: #fff !important;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1) !important;
+        }
+
+        .popup-content::-webkit-scrollbar { width: 5px; }
+        .popup-content::-webkit-scrollbar-thumb { background: #b3004b; border-radius: 10px; }
+
+        .line-clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Pinning specific styles */
+        .pinned-badge {
+            position: absolute; 
+            top: -10px; 
+            right: 10px; 
+            background: #ff9800; 
+            color: white; 
+            font-size: 0.65rem; 
+            padding: 3px 10px; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <header class="admin-header" style="background: 1a237e;">
+        <img src="../../assets/logo.png" alt="Logo">
+        <div style="display: flex; align-items: center;">
+            <a href="student_home.html" style="color: white; margin-right: 15px; font-size: 1.2rem;">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-text">
+                <h2>Department</h2>
+                <p>Department Notices</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-content" style="padding: 15px;">
+        <div id="dept-notice-container">
+            <p style="text-align:center; color:#999; margin-top:50px;">Fetching department updates...</p>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="student_profile.html" class="nav-item"><i class="fas fa-user"></i></a>
+        <a href="student_home.html" class="nav-item active"><i class="fas fa-home"></i></a>
+        <a href="student_notices.html" class="nav-item"><i class="fas fa-history"></i></a>
+    </nav>
+
+    <script type="module">
+    import { db } from '../../js/firebase-config.js';
+    import { collection, query, where, orderBy, onSnapshot, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const container = document.getElementById('dept-notice-container');
+    window.allDeptNotices = {};
+    const rawId = localStorage.getItem("userReg") || "";
+    const userName = localStorage.getItem("userName") || "Student";
+    const myDept = rawId.substring(2, 5); 
+
+    let activeIntervals = {};
+
+    if (container && myDept) {
+        const q = query(
+            collection(db, "notices"),
+            where("targetCode", "==", myDept), 
+            orderBy("createdAt", "desc")
+        );
+
+        onSnapshot(q, (snapshot) => {
+            Object.values(activeIntervals).forEach(clearInterval);
+            activeIntervals = {};
+
+            container.innerHTML = '';
+            if (snapshot.empty) {
+                container.innerHTML = '<p style="text-align:center; color:#999; margin-top:50px;">No department-wide notices yet.</p>';
+                return;
+            }
+            
+            const now = new Date();
+            const twoDaysFromNow = new Date();
+            twoDaysFromNow.setDate(now.getDate() + 2);
+
+            let pinnedNotices = [];
+            let regularNotices = [];
+
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                window.allDeptNotices[id] = data;
+
+                // 1. Expiry Check
+                const expiryDate = data.expiresAt?.toDate ? data.expiresAt.toDate() : (data.expiresAt ? new Date(data.expiresAt) : null);
+                if (expiryDate && expiryDate <= now) return;
+
+                // 2. Auto-Pin Logic
+                let isPinned = false;
+                if (data.event_date) {
+                    const eventDate = new Date(data.event_date);
+                    if (eventDate <= twoDaysFromNow && eventDate >= now.setHours(0,0,0,0)) {
+                        isPinned = true;
+                    }
+                }
+
+                const cardHtml = generateCardHtml(id, data, expiryDate, isPinned, myDept);
+                
+                if (isPinned) pinnedNotices.push({html: cardHtml, id, expiryDate});
+                else regularNotices.push({html: cardHtml, id, expiryDate});
+            });
+
+            // 3. Render Pinned first, then Regular
+            [...pinnedNotices, ...regularNotices].forEach(item => {
+                container.innerHTML += item.html;
+                if (item.expiryDate) startLiveTimer(item.id, item.expiryDate);
+            });
+        });
+    }
+
+    function generateCardHtml(id, data, expiryDate, isPinned, myDept) {
+        const accentColor = "#b3004b";
+        const pinColor = "#ff9800";
+        const hasAttachment = data.attachmentUrl ? `<i class="fas fa-paperclip" style="color:${isPinned ? pinColor : accentColor}; margin-left:8px;"></i>` : "";
+        
+        return `
+            <div class="notice-card" id="dept-card-${id}" onclick="showDeptPopup('${id}')" 
+                 style="cursor:pointer; background:white; padding:18px; border-radius:15px; margin-bottom:20px; 
+                 border-left:6px solid ${isPinned ? pinColor : accentColor}; 
+                 box-shadow: ${isPinned ? '0 4px 15px rgba(255,152,0,0.2)' : '0 4px 12px rgba(0,0,0,0.08)'}; 
+                 transition: all 0.3s ease; position:relative;">
+                
+                ${isPinned ? `<div class="pinned-badge"><i class="fas fa-thumbtack"></i> UPCOMING EVENT</div>` : ''}
+
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                    <div style="font-weight:bold; color:${isPinned ? '#e65100' : '#333'}; font-size:1.1rem; flex:1; padding-right:10px;">
+                        <i class="fas ${isPinned ? 'fa-calendar-day' : 'fa-building'}" style="color:${isPinned ? pinColor : accentColor}; margin-right:8px; font-size:0.9rem;"></i>${data.title} ${hasAttachment}
+                    </div>
+                    ${expiryDate ? `
+                        <div id="timer-${id}" style="color: #d32f2f; font-size: 0.7rem; font-weight: bold; background: #fff5f5; padding: 4px 8px; border-radius: 6px; white-space:nowrap;">
+                            <i class="fas fa-clock"></i> <span id="time-text-${id}">Active</span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                ${data.event_date ? `<div style="font-size:0.8rem; color:#e65100; font-weight:bold; margin-bottom:8px;"><i class="fas fa-calendar-alt"></i> Event Date: ${new Date(data.event_date).toLocaleDateString()}</div>` : ''}
+
+                <div class="line-clamp" style="font-size:0.9rem; color:#666; line-height:1.5; margin-bottom:12px;">
+                    ${data.content}
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#999; border-top:1px solid #f5f5f5; padding-top:10px;">
+                    <span><i class="fas fa-user-edit"></i> ${data.authorName}</span>
+                    <span style="background:#fce4ec; color:${accentColor}; padding:2px 8px; border-radius:10px; font-weight:bold;">${myDept} DEPT</span>
+                </div>
+            </div>`;
+    }
+
+    function startLiveTimer(id, expiryDate) {
+        activeIntervals[id] = setInterval(() => {
+            const timeLeft = expiryDate - new Date();
+            if (timeLeft <= 0) {
+                const card = document.getElementById(`dept-card-${id}`);
+                if (card) { card.style.opacity = "0"; setTimeout(() => card.remove(), 500); }
+                clearInterval(activeIntervals[id]);
+                return;
+            }
+            const mins = Math.floor((timeLeft / 1000 / 60) % 60);
+            const secs = Math.floor((timeLeft / 1000) % 60);
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const timeText = document.getElementById(`time-text-${id}`);
+            if (timeText) timeText.innerText = hours > 0 ? `${hours}h ${mins}m` : `${mins}m ${secs}s`;
+        }, 1000);
+    }
+
+    window.showDeptPopup = function(id) {
+        const notice = window.allDeptNotices[id];
+        if (!notice) return;
+        recordView(id);
+
+        const existing = document.getElementById('notice-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = "notice-overlay";
+        overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000; padding:20px; backdrop-filter: blur(4px);";
+        
+        const linkedContent = notice.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:#b3004b; text-decoration:underline; font-weight:bold;">$1</a>');
+
+        let mediaHtml = "";
+        if (notice.attachmentUrl) {
+            if (notice.attachmentType === 'image') {
+                mediaHtml = `<div style="margin-top:20px; text-align:center;"><img src="${notice.attachmentUrl}" style="max-width:100%; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);"></div>`;
+            } else if (notice.attachmentType === 'video') {
+                mediaHtml = `<div style="margin-top:20px;"><video controls style="width:100%; border-radius:12px;"><source src="${notice.attachmentUrl}"></video></div>`;
+            } else {
+                mediaHtml = `<a href="${notice.attachmentUrl}" target="_blank" style="display:flex; align-items:center; gap:12px; background:#fdf2f6; padding:15px; border-radius:12px; margin-top:20px; text-decoration:none; border:1px solid #f8bbd0;">
+                    <i class="fas fa-file-pdf" style="color:#b3004b; font-size:1.5rem;"></i>
+                    <span style="color:#b3004b; font-weight:bold;">Download Attachment</span></a>`;
+            }
+        }
+
+        overlay.innerHTML = `
+            <div style="background:white; width:100%; max-width:550px; max-height:90vh; border-radius:20px; position:relative; animation: popIn 0.3s ease; display:flex; flex-direction:column; overflow:hidden;">
+                <div style="padding:20px 25px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <h2 style="color:#b3004b; margin:0; font-size:1.3rem;">${notice.title}</h2>
+                    <button onclick="document.getElementById('notice-overlay').remove()" style="position:absolute; top:15px; right:15px; border:none; background:#eee; width:30px; height:30px; border-radius:50%; cursor:pointer;">&times;</button>
+                </div>
+                <div style="padding:25px; overflow-y:auto; flex:1;">
+                    ${notice.event_date ? `<div style="background:#fff3e0; color:#e65100; padding:10px; border-radius:10px; margin-bottom:15px; font-weight:bold;"><i class="fas fa-calendar-star"></i> Event Scheduled: ${new Date(notice.event_date).toLocaleDateString()}</div>` : ''}
+                    <div style="color:#444; line-height:1.7; white-space:pre-wrap;">${linkedContent}</div>
+                    ${mediaHtml}
+                </div>
+                <div style="padding:15px 25px; background:#f9f9f9; border-top:1px solid #eee; font-size:0.85rem; display:flex; justify-content:space-between;">
+                    <span><i class="fas fa-user-circle"></i> ${notice.authorName}</span>
+                    <span style="color:#b3004b; font-weight:bold;">${myDept} DEPT</span>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+    };
+
+    async function recordView(noticeId) {
+        if (!rawId || !noticeId) return;
+        try {
+            const viewRef = doc(db, "notices", noticeId, "views", rawId);
+            await setDoc(viewRef, { viewerName: userName, viewedAt: serverTimestamp(), studentId: rawId }, { merge: true });
+        } catch (e) { console.error(e); }
+    }
+    </script>
+</body>
+</html>

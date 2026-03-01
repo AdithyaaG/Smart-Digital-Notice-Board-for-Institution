@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="staff-body">
+
+    <header class="admin-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="../../assets/logo.png" alt="SR-Notify Logo" id="header-logo" style="height: 50px;">
+        <div class="header-text">
+            <h2 style="margin: 0; color: white;">SR-Notify</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Department Manage</p>
+        </div>
+    </div>
+    
+
+    <a href="staff_profile.html" class="top-profile-link" style="text-decoration: none;">
+        <div id="profile-container" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2);">
+            <img id="user-header-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <i id="user-header-icon" class="fas fa-user-circle" style="font-size: 2rem; color: white;"></i>
+        </div>
+    </a>
+
+    </header>
+    <main class="staff">
+        
+        
+    </main>
+
+    <div class="staff-header">
+        <h2 id="staff-welcome">Staff Dashboard</h2> 
+    </div>
+
+    <div id="staff-notice-container"></div>
+
+    <script>
+    // This MUST be inside <script> tags to run as code
+    const sName = localStorage.getItem("userName");
+    const welcomeBox = document.getElementById("staff-welcome");
+    
+    if (sName && welcomeBox) {
+        welcomeBox.innerText = `Welcome, ${sName}`;
+    }
+</script>
+
+    <script type="module" src="../../js/staff_feed.js"></script>
+    <script type="module" src="../../js/profile_handler.js"></script>
+
+
+    <nav class="bottom-nav">
+        <a href="staff_clsrom.html" class="nav-item"><i class="fas fa-chalkboard-teacher"></i></a>        
+        <a href="staff_home.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="staff_cn.html" class="nav-item"><i class="fas fa-plus-square"></i></a>
+        <a href="staff_notice.html" class="nav-item"><i class="fas fa-clipboard-list"></i></a>
+    </nav>
+
+</body>
+</html>
