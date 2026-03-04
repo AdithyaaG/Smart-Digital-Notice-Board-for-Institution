@@ -7,18 +7,15 @@
     <link rel="stylesheet" href="../../css/role.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Modern Theme Overrides */
         :root {
             --primary-blue: #1a237e;
             --accent-blue: #3f51b5;
             --bg-soft: #f4f7fe;
         }
 
-        body {
-            background-color: var(--bg-soft);
-        }
+        body { background-color: var(--bg-soft); }
 
-        /* Header Button Refinement */
+        /* --- Header & Buttons --- */
         .btn-post { 
             background: rgba(255, 255, 255, 0.2); 
             color: white; 
@@ -27,151 +24,147 @@
             border-radius: 12px; 
             font-weight: 700; 
             cursor: pointer; 
-            margin-left: auto; 
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
             text-transform: uppercase;
-            letter-spacing: 1px;
             font-size: 0.85rem;
         }
         .btn-post:hover { background: white; color: var(--primary-blue); transform: translateY(-2px); }
-        .btn-post:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-post:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* Priority Selector Styling */
-        .priority-wrapper { 
-            padding: 15px 20px; 
-            background: #fff; 
+        /* --- Input Containers --- */
+        .priority-wrapper, .post-container { 
+            background: white; 
             margin: 15px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 20px;
         }
-        .priority-select { 
-            width: 100%; 
-            padding: 12px; 
+
+        .priority-select, .date-input { 
+            width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 10px; outline: none; background-color: #f9fbff; color: var(--primary-blue); font-weight: 600;
+        }
+
+        #noticeTitle { width: 100%; padding: 15px; border: none; border-bottom: 2px solid #f0f0f0; font-size: 1.2rem; font-weight: 700; outline: none; color: var(--primary-blue); }
+        #noticeContent { width: 100%; padding: 15px; border: 1px solid #f0f0f0; background: #fafafa; border-radius: 12px; font-size: 1rem; resize: none; outline: none; height: 150px; box-sizing: border-box; }
+
+        /* --- Target Selection Styling --- */
+        .target-box {
+            flex: 1; 
             border: 2px solid #eef2f7; 
-            border-radius: 10px; 
-            font-size: 0.95rem; 
-            outline: none; 
-            background-color: #f9fbff; 
-            color: var(--primary-blue);
-            font-weight: 600;
-            transition: border-color 0.3s;
-        }
-        .priority-select:focus { border-color: var(--accent-blue); }
-
-        /* Post Container Enhancements */
-        .post-container { 
-            display: flex; 
-            flex-direction: column; 
-            padding: 20px; 
-            gap: 15px; 
-            margin: 0 15px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            margin-bottom: 100px; /* Space for FAB */
-        }
-
-        #noticeTitle { 
-            width: 100%; 
-            padding: 15px; 
-            border: none;
-            border-bottom: 2px solid #f0f0f0;
-            font-size: 1.2rem; 
-            font-weight: 700;
-            outline: none; 
-            box-sizing: border-box;
-            color: var(--primary-blue);
-        }
-        #noticeTitle::placeholder { color: #bdc3c7; }
-        #noticeTitle:focus { border-bottom-color: var(--accent-blue); }
-
-        #noticeContent { 
-            flex-grow: 1; 
-            width: 100%; 
-            padding: 15px; 
-            border: 1px solid #f0f0f0; 
-            background: #fafafa;
+            padding: 12px 5px; 
             border-radius: 12px; 
-            font-size: 1rem; 
-            resize: none; 
-            outline: none; 
-            height: 180px; 
-            box-sizing: border-box;
-            line-height: 1.6;
+            text-align: center; 
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f9fbff;
+        }
+        .target-box i { display: block; font-size: 1.3rem; color: #95a5a6; margin-bottom: 5px; }
+        .target-box span { font-size: 0.65rem; font-weight: 800; color: #7f8c8d; }
+        
+        .target-box.active {
+            border-color: var(--primary-blue);
+            background: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.1);
+        }
+        .target-box.active i { color: var(--primary-blue); }
+        .target-box.active span { color: var(--primary-blue); }
+
+        #batchSelectionArea {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
         }
 
-        /* Dynamic Date Section Style */
-        #eventDateWrapper { 
-            display: none; 
-            background: #fff8e1; 
-            padding: 15px; 
-            border-radius: 12px; 
-            border: 1px solid #ffe082; 
-            margin-bottom: 5px;
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .date-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-top: 8px; font-family: inherit; }
-
-        /* Media Attachment Area */
+        /* --- MULTI-PREVIEW STYLES --- */
         #attachmentArea { 
             display: none; 
-            padding: 20px; 
+            padding: 15px; 
             background: #fff; 
             margin: 15px;
             border-radius: 20px;
             border: 2px dashed #d1d9e6;
-            text-align: center;
         }
-        #upload-status { display:none; color: var(--accent-blue); font-size: 0.9rem; margin-top: 10px; font-weight: bold; }
 
-        /* Floating Action Button (FAB) */
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        #preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 10px;
+        }
+
+        .preview-item {
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            background: #f0f0f0;
+        }
+
+        .preview-item img, .preview-item video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .remove-link {
+            color: #e74c3c;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* --- FAB --- */
         .fab-container { position: fixed; bottom: 90px; right: 25px; z-index: 1000; }
         .attachment-menu { 
-            display: none; 
-            flex-direction: column; 
-            gap: 15px; 
-            margin-bottom: 15px; 
-            background: white; 
-            padding: 12px; 
-            border-radius: 30px; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
-            transform: scale(0.8);
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: none; flex-direction: column; gap: 15px; margin-bottom: 15px; background: white; padding: 12px; border-radius: 30px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
         }
-        .attachment-menu.active { display: flex; transform: scale(1); }
-        
-        .btn-add-main { 
-            background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue)); 
-            color: white; 
-            width: 60px; 
-            height: 60px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1.5rem; 
-            box-shadow: 0 6px 20px rgba(26,35,126,0.4); 
-            cursor: pointer; 
-            transition: 0.3s;
-        }
-        .btn-add-main:active { transform: scale(0.9); }
+        .attachment-menu.active { display: flex; }
+        .btn-add-main { background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue)); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; }
+
     </style>
 </head>
 <body class="admin-body">
-    <header class="admin-header">
-        <img src="../../assets/logo.png" alt="Logo">
-        <div class="header-text">
-            <h2>SR-Notify</h2>
-            <p style="opacity: 0.8; font-size: 0.8rem;">Broadcast Department Notice</p>
+    <header class="admin-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--primary-blue);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="../../assets/logo.png" alt="Logo" style="height: 40px;">
+            <h2 style="margin: 0; color: white; font-size: 1.2rem;">SR-Notify</h2>
         </div>
         <button type="button" id="publishBtn" onclick="publishStaffNotice()" class="btn-post">POST</button>
     </header>
 
     <div class="priority-wrapper">
-        <label style="font-size: 0.75rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 1px;">Category</label>
+        <label style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase;">Notice Target</label>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div id="target-class" class="target-box active" onclick="setTarget('class')">
+                <i class="fas fa-user-friends"></i>
+                <span>MY CLASS</span>
+            </div>
+            <div id="target-department" class="target-box" onclick="setTarget('department')">
+                <i class="fas fa-university"></i>
+                <span>ALL DEPT</span>
+            </div>
+            <div id="target-choose" class="target-box" onclick="setTarget('choose')">
+                <i class="fas fa-layer-group"></i>
+                <span>CHOOSE</span>
+            </div>
+        </div>
+
+        <div id="batchSelectionArea" style="display: none;">
+            <label style="font-size: 0.7rem; font-weight: 800; color: #95a5a6;">SELECT BATCHES</label>
+            <div id="batchCheckboxList" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                </div>
+        </div>
+    </div>
+
+    <div class="priority-wrapper">
+        <label style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase;">Category</label>
         <select id="noticePriority" class="priority-select" onchange="toggleDateInput()">
             <option value="normal">📌 General Announcement</option>
             <option value="important">🚨 Important (Exams/Fees)</option>
@@ -181,33 +174,27 @@
     </div>
 
     <main class="post-container">
-        <div id="eventDateWrapper">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#f57c00; font-size: 0.85rem;">
-                <i class="fas fa-calendar-day"></i> Event Date (Auto-Pins to Feed):
-            </label>
+        <div id="eventDateWrapper" style="display:none;">
+            <label style="font-weight:bold; color:#f57c00; font-size: 0.8rem;">Event Date:</label>
             <input type="date" id="eventDate" class="date-input">
         </div>
 
         <input type="text" id="noticeTitle" placeholder="Notice Heading...">
         <textarea id="noticeContent" placeholder="Write the details here..."></textarea>
         
-        <div class="expiry-section" style="padding-top:15px; border-top: 1px solid #f0f0f0;">
-            <label style="display:block; margin-bottom:10px; font-weight:bold; color:var(--primary-blue); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                <i class="fas fa-hourglass-end"></i> Auto-Hide (Expiry)
-            </label>
-            <input type="datetime-local" id="expiryDate" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; color: #555;">
+        <div style="margin-top:15px;">
+            <label style="font-weight:bold; color:var(--primary-blue); font-size: 0.75rem; text-transform: uppercase;">Auto-Hide (Expiry)</label>
+            <input type="datetime-local" id="expiryDate" class="date-input">
         </div>
     </main>
 
     <div id="attachmentArea">
-        <label style="display:block; font-weight:bold; color:var(--primary-blue); margin-bottom:10px; font-size:0.9rem;">
-            <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; display: block; margin-bottom: 5px;"></i>
-            Upload the attachment here..
-        </label>
-        <input type="file" id="staff-file-input" accept="image/*,video/*" style="width:100%; padding:15px; cursor: pointer; border-radius:10px; background: #f8f9fa;">
-        <div id="upload-status">
-            <i class="fas fa-sync fa-spin"></i> Processing Media...
+        <div class="preview-header">
+            <span id="file-status" style="font-size: 0.75rem; font-weight: bold; color: var(--primary-blue);">0 MEDIA SELECTED</span>
+            <span class="remove-link" onclick="clearMedia()"><i class="fas fa-trash"></i> CLEAR</span>
         </div>
+        <div id="preview-grid"></div>
+        <input type="file" id="staff-file-input" multiple accept="image/*,video/*" style="margin-top: 15px; width: 100%;">
     </div>
 
     <div class="fab-container">
@@ -218,39 +205,87 @@
     </div>
 
     <nav class="bottom-nav">
-        <a href="staff_clsrom.html" class="nav-item"><i class="fas fa-chalkboard-teacher"></i></a>        
+        <a href="staff_clsrom.html" class="nav-item"><i class="fas fa-chalkboard-teacher"></i></a>         
         <a href="staff_home.html" class="nav-item"><i class="fas fa-home"></i></a>
-        <a href="staff_cn.html" class="nav-item"><i class="fas fa-plus-square"></i></a>
+        <a href="staff_cn.html" class="nav-item active"><i class="fas fa-plus-square"></i></a>
         <a href="staff_notice.html" class="nav-item"><i class="fas fa-clipboard-list"></i></a>
     </nav>
 
     <script type="module" src="../../js/staff_post.js"></script>
-    <script type="module" src="../../js/profile_handler.js"></script>
-
-    
     <script>
         const mainBtn = document.getElementById('mainAddBtn');
         const menu = document.getElementById('attachmentMenu');
         const mediaArea = document.getElementById('attachmentArea');
         const mediaIcon = document.getElementById('mediaIcon');
+        const fileInput = document.getElementById('staff-file-input');
+        const previewGrid = document.getElementById('preview-grid');
+        const fileStatus = document.getElementById('file-status');
         
+        // --- Target Selection Logic (YOUR TRICK IMPLEMENTED HERE) ---
+        window.currentTargetMode = 'class'; 
+
+        window.setTarget = (mode) => {
+            // THE TRICK: Redirect if "department" is chosen
+            if (mode === 'department') {
+                if (confirm("Redirect to Department Notice page? This notice will be visible to ALL students in your department.")) {
+                    window.location.href = "department_cn.html";
+                    return;
+                } else {
+                    return; // Stay on page if they cancel
+                }
+            }
+
+            window.currentTargetMode = mode;
+            
+            // UI Feedback
+            document.querySelectorAll('.target-box').forEach(box => box.classList.remove('active'));
+            const activeBox = document.getElementById(`target-${mode}`);
+            if(activeBox) activeBox.classList.add('active');
+            
+            // Show/Hide Batch Selection for 'choose' mode
+            const batchArea = document.getElementById('batchSelectionArea');
+            batchArea.style.display = (mode === 'choose') ? 'block' : 'none';
+        };
+
+        // --- Attachment Logic ---
         mainBtn.onclick = () => menu.classList.toggle('active');
 
         mediaIcon.onclick = () => {
-            mediaArea.style.display = mediaArea.style.display === "block" ? "none" : "block";
+            mediaArea.style.display = "block";
             mediaArea.scrollIntoView({ behavior: 'smooth' });
             menu.classList.remove('active');
+        };
+
+        fileInput.addEventListener('change', function() {
+            const files = Array.from(this.files);
+            previewGrid.innerHTML = '';
+            fileStatus.innerText = `${files.length} MEDIA SELECTED`;
+            
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                
+                if (file.type.startsWith('image/')) {
+                    div.innerHTML = `<img src="${url}">`;
+                } else {
+                    div.innerHTML = `<video src="${url}"></video>`;
+                }
+                previewGrid.appendChild(div);
+            });
+        });
+
+        window.clearMedia = () => {
+            fileInput.value = '';
+            previewGrid.innerHTML = '';
+            fileStatus.innerText = '0 MEDIA SELECTED';
+            mediaArea.style.display = 'none';
         };
 
         window.toggleDateInput = () => {
             const priority = document.getElementById('noticePriority').value;
             const wrapper = document.getElementById('eventDateWrapper');
-            if (priority === 'event' || priority === 'off_campus') {
-                wrapper.style.display = 'block';
-            } else {
-                wrapper.style.display = 'none';
-                document.getElementById('eventDate').value = '';
-            }
+            wrapper.style.display = (priority === 'event' || priority === 'off_campus') ? 'block' : 'none';
         };
     </script>
 </body>

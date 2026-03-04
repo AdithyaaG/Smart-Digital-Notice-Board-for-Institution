@@ -4,7 +4,7 @@ import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/fir
 const CLOUD_NAME = "dfie8haie"; 
 const UPLOAD_PRESET = "sr_notices"; 
 
-// 1. Cloudinary Upload Logic
+// 1. Cloudinary Upload Logic (Modified to handle a single file)
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
@@ -16,9 +16,16 @@ async function uploadToCloudinary(file) {
             body: formData
         });
 
-        if (!response.ok) throw new Error('Upload failed');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error.message || 'Upload failed');
+        }
+
         const data = await response.json();
-        return { url: data.secure_url, type: data.resource_type };
+        return { 
+            url: data.secure_url, 
+            type: data.resource_type // 'image', 'video', or 'raw'
+        };
     } catch (error) {
         console.error("Cloudinary Error:", error);
         return null;
@@ -33,9 +40,9 @@ window.publishNotice = async function() {
     const priority = document.getElementById('noticePriority').value;
     const eventDate = document.getElementById('eventDate').value; 
     
-    // Get file from the single input you have in HTML
+    // Get ALL files from the input
     const fileInput = document.getElementById('file-input');
-    const file = fileInput ? fileInput.files[0] : null;
+    const files = fileInput ? Array.from(fileInput.files) : [];
 
     const user = auth.currentUser;
     if (!user) {
@@ -51,14 +58,26 @@ window.publishNotice = async function() {
     const postBtn = document.querySelector('.btn-post');
     if (postBtn) {
         postBtn.disabled = true;
-        postBtn.innerText = "POSTING...";
+        postBtn.innerText = "UPLOADING...";
     }
 
-    let attachmentData = null;
-    if (file) {
-        attachmentData = await uploadToCloudinary(file);
-        if (!attachmentData) {
-            alert("File upload failed.");
+    // --- MULTIPLE FILE UPLOAD LOGIC ---
+    let attachments = [];
+    if (files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+            if (postBtn) postBtn.innerText = `UPLOADING (${i + 1}/${files.length})...`;
+            
+            const uploadedData = await uploadToCloudinary(files[i]);
+            if (uploadedData) {
+                attachments.push(uploadedData);
+            } else {
+                console.error(`Failed to upload: ${files[i].name}`);
+                // Optional: stop if one fails, or continue. Here we continue.
+            }
+        }
+
+        if (attachments.length === 0 && files.length > 0) {
+            alert("All file uploads failed. Please check your connection.");
             if (postBtn) {
                 postBtn.disabled = false;
                 postBtn.innerText = "POST";
@@ -66,6 +85,8 @@ window.publishNotice = async function() {
             return;
         }
     }
+
+    if (postBtn) postBtn.innerText = "SAVING...";
 
     try {
         await addDoc(collection(db, "notices"), {
@@ -77,13 +98,16 @@ window.publishNotice = async function() {
             authorEmail: user.email,
             authorRole: "admin", 
             targetCode: "ALL", 
-            attachmentUrl: attachmentData ? attachmentData.url : null,
-            attachmentType: attachmentData ? attachmentData.type : null,
+            // We now store the full array of attachments
+            attachments: attachments, 
+            // Backward compatibility for old single-file logic
+            attachmentUrl: attachments.length > 0 ? attachments[0].url : null,
+            attachmentType: attachments.length > 0 ? attachments[0].type : null,
             createdAt: serverTimestamp(),
             expiresAt: expiryValue ? new Date(expiryValue) : null
         });
 
-        alert("Broadcast Notice Sent to All Students!");
+        alert(`Notice sent successfully with ${attachments.length} attachment(s)!`);
         window.location.href = "admin_home.html"; 
     } catch (error) {
         console.error("Firestore Error:", error);
@@ -95,9 +119,10 @@ window.publishNotice = async function() {
     }
 };
 
-// 3. Simple File Change Listener
+// 3. Simple Console Logger
 document.getElementById('file-input')?.addEventListener('change', (e) => {
-    if (e.target.files[0]) {
-        alert("File selected: " + e.target.files[0].name);
+    const files = e.target.files;
+    if (files.length > 0) {
+        console.log(`${files.length} files queued for upload.`);
     }
 });

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin: Staff Assignment | SR-Notify</title>
+    <link rel="stylesheet" href="../../css/role.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #1a237e; --accent: #fce4ec; --text: #333; --shadow: 0 4px 15px rgba(0,0,0,0.1); --danger: #ff4d4d; }
+        body { background-color: #f9f9f9; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .dept-header { background: #d32f2f; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 20px 20px; }
+        .dept-container { padding: 20px 15px 100px; max-width: 700px; margin: auto; }
+        .management-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .category-label { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 25px 0 10px; display: flex; align-items: center; gap: 10px; }
+        .category-label::before { content: ''; width: 4px; height: 18px; background: #d32f2f; border-radius: 10px; }
+        .shift-card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; transition: 0.3s; }
+        .batch-grid { display: none; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin: 10px 0 20px; padding-left: 10px; }
+        .batch-pill-container { position: relative; }
+        .batch-pill { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 10px; text-align: center; font-weight: 600; color: #555; cursor: pointer; transition: 0.2s; min-height: 60px; display: flex; flex-direction: column; justify-content: center; }
+        .batch-pill:hover { background: #d32f2f; color: white; }
+        .batch-pill:hover small { color: white !important; }
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; border: none; width: 22px; height: 22px; border-radius: 50%; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        
+        .overview-table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: var(--shadow); margin-top: 15px; }
+        .overview-table th { background: #fff5f5; color: #d32f2f; text-align: left; padding: 12px; font-size: 0.85rem; }
+        .overview-table td { padding: 12px; border-top: 1px solid #eee; font-size: 0.85rem; color: #555; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 380px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .input-field { width: 100%; padding: 12px; margin: 6px 0 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 0.9rem; }
+        .btn-confirm { background: #d32f2f; color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-clear { background: #f4f4f4; color: var(--danger); border: 1px solid #ddd; width: 100%; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 8px; font-size: 0.8rem; }
+        
+        .btn-invite { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; width: 100%; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 8px; font-size: 0.8rem; display: none; align-items: center; justify-content: center; gap: 8px; }
+
+        .status-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; margin-bottom: 10px; display: inline-block; font-weight: bold; }
+        .status-assigned { background: #e8f5e9; color: #2e7d32; }
+        .status-vacant { background: #fff3e0; color: #ef6c00; }
+        .input-label { font-size: 0.75rem; font-weight: 600; color: #666; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+    <header class="dept-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button onclick="window.location.href='admin_dept_manage.html'" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; cursor: pointer;"><i class="fas fa-arrow-left"></i></button>
+            <div>
+                <h2 style="margin: 0; font-size: 1.2rem;">Staff Management</h2>
+                <p id="deptSubtitle" style="margin: 0; font-size: 0.75rem; opacity: 0.9;">Admin Control Panel</p>
+            </div>
+        </div>
+        <div style="font-weight: bold; background: white; color: #d32f2f; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">ADMIN</div>
+    </header>
+
+    <main class="dept-container">
+        <div class="management-bar">
+            <div class="category-label" style="margin:0;">Batches for Dept</div>
+            <button style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;" onclick="openCreateModal()"><i class="fas fa-plus"></i> New Batch</button>
+        </div>
+
+        <div class="category-label">UG - Shift I</div>
+        <div class="shift-card" onclick="toggleBatch('ug-s1')">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="background:#fff9c4; color:#fbc02d; padding:10px; border-radius:10px;"><i class="fas fa-sun"></i></div>
+                <div><strong>Morning Session</strong></div>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div id="ug-s1" class="batch-grid"></div>
+
+        <div class="category-label">UG - Shift II</div>
+        <div class="shift-card" onclick="toggleBatch('ug-s2')">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="background:#e1f5fe; color:#0288d1; padding:10px; border-radius:10px;"><i class="fas fa-moon"></i></div>
+                <div><strong>Evening Session</strong></div>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div id="ug-s2" class="batch-grid"></div>
+
+        <div class="category-label">PG - Shift I</div>
+        <div class="shift-card" onclick="toggleBatch('pg-s1')">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="background:#f3e5f5; color:#7b1fa2; padding:10px; border-radius:10px;"><i class="fas fa-graduation-cap"></i></div>
+                <div><strong>Post Graduate</strong></div>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div id="pg-s1" class="batch-grid"></div>
+
+        <div class="category-label">Staff Allocation Summary</div>
+        <table class="overview-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">S.NO</th>
+                    <th>Batch Name</th>
+                    <th>Assigned Staff</th>
+                </tr>
+            </thead>
+            <tbody id="overviewBody"></tbody>
+        </table>
+    </main>
+
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+            <div id="staffStatus" class="status-badge">Checking...</div>
+            <h3 id="assignTitle" style="margin: 0 0 15px; color: #d32f2f;">Assign Staff</h3>
+            <div class="input-label">Staff Name</div>
+            <input type="text" id="staffName" class="input-field" placeholder="Full Name">
+            <div class="input-label">Staff Email</div>
+            <input type="email" id="staffEmail" class="input-field" placeholder="email@srcas.ac.in">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1"><div class="input-label">Start Reg</div><input type="number" id="regStart" class="input-field"></div>
+                <div style="flex:1"><div class="input-label">End Reg</div><input type="number" id="regEnd" class="input-field"></div>
+            </div>
+            <button class="btn-confirm" onclick="updateStaffRecord()">Save Assignment</button>
+            <button id="btnInvite" class="btn-invite" onclick="copyInviteLink()"><i class="fas fa-copy"></i> Copy Invite Link</button>
+            <button id="btnClear" class="btn-clear" onclick="clearAssignment()">Clear Assignment</button>
+            <button onclick="closeModals()" style="background: none; border: none; color: #999; width: 100%; margin-top: 10px; cursor: pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: #d32f2f; margin-bottom: 15px;">Add New Batch</h3>
+            <div class="input-label">Batch Year (e.g., 23)</div>
+            <input type="number" id="newYear" class="input-field" placeholder="23">
+            <div class="input-label">Category</div>
+            <select id="newCategory" class="input-field">
+                <option value="ug-s1">UG - Shift I</option>
+                <option value="ug-s2">UG - Shift II</option>
+                <option value="pg-s1">PG - Shift I</option>
+            </select>
+            <button class="btn-confirm" onclick="addNewBatch()">Create Batch</button>
+            <button onclick="closeModals()" style="background:none; border:none; width:100%; margin-top:10px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from "../../js/firebase-config.js"; 
+        import { collection, query, where, getDocs, updateDoc, doc, setDoc, deleteDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CRITICAL FIX: Get dept from URL not localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedDept = urlParams.get('dept'); 
+
+        if(!selectedDept) {
+            alert("No department selected!");
+            window.location.href = "admin_dept_manage.html";
+        }
+        document.getElementById('deptSubtitle').innerText = `Department Code: ${selectedDept}`;
+
+        async function initBatches() {
+            try {
+                const q = query(collection(db, "batches"), where("dept_code", "==", selectedDept));
+                const snap = await getDocs(q);
+                
+                document.querySelectorAll('.batch-grid').forEach(g => g.innerHTML = "");
+                const overviewBody = document.getElementById('overviewBody');
+                overviewBody.innerHTML = ""; 
+
+                let counter = 1;
+                snap.forEach(docSnap => {
+                    const b = docSnap.data();
+                    const container = document.getElementById(b.category);
+                    if (container) {
+                        createBatchPill(container, b, docSnap.id);
+                        container.style.display = 'grid';
+                    }
+
+                    overviewBody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td><strong>${b.title}</strong></td>
+                            <td style="color: ${b.controller_name ? '#d32f2f' : '#999'}">
+                                ${b.controller_name || 'Vacant'}
+                            </td>
+                        </tr>
+                    `);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function createBatchPill(container, data, docId) {
+            const div = document.createElement('div');
+            div.className = 'batch-pill-container';
+            const controller = data.controller_name ? 
+                `<small style="display:block; font-size:10px; color:#d32f2f; margin-top:4px;">${data.controller_name}</small>` : 
+                `<small style="display:block; font-size:10px; color:#999; margin-top:4px;">Vacant</small>`;
+
+            div.innerHTML = `
+                <div class="batch-pill" onclick="openAssign('${data.title}', '${docId}')">
+                    <span>${data.year} Batch</span>
+                    ${controller}
+                </div>
+                <button class="delete-btn" onclick="deleteBatch('${docId}', this)"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        window.openAssign = async (title, docId) => {
+            window.currentBatchId = docId;
+            document.getElementById('assignTitle').innerText = title;
+            document.getElementById('assignModal').style.display = 'flex';
+            
+            const batchDoc = await getDoc(doc(db, "batches", docId));
+            if (batchDoc.exists()) {
+                const d = batchDoc.data();
+                document.getElementById('staffName').value = d.controller_name || "";
+                document.getElementById('staffEmail').value = d.controller_email || "";
+                document.getElementById('regStart').value = d.start_reg || "";
+                document.getElementById('regEnd').value = d.end_reg || "";
+                window.updateAssignUI(d.controller_email);
+            }
+        };
+
+        window.updateAssignUI = async (email) => {
+            if(!email) return;
+            const status = document.getElementById('staffStatus');
+            const inviteBtn = document.getElementById('btnInvite');
+            
+            const q = query(collection(db, "users"), where("email", "==", email.toLowerCase().trim()));
+            const snap = await getDocs(q);
+
+            if(!snap.empty) {
+                status.innerText = "Registered Staff";
+                status.className = "status-badge status-assigned";
+                inviteBtn.style.display = "none";
+            } else {
+                status.innerText = "Unregistered (Needs Invite)";
+                status.className = "status-badge status-vacant";
+                inviteBtn.style.display = "block";
+            }
+        };
+
+        window.updateStaffRecord = async () => {
+            const email = document.getElementById('staffEmail').value.trim().toLowerCase();
+            const name = document.getElementById('staffName').value.trim();
+            const start = parseInt(document.getElementById('regStart').value);
+            const end = parseInt(document.getElementById('regEnd').value);
+            const batchTitle = document.getElementById('assignTitle').innerText;
+
+            if(!email || !name || !start || !end) return alert("Please fill all fields!");
+
+            try {
+                // 1. Update Batch Document
+                await updateDoc(doc(db, "batches", window.currentBatchId), {
+                    controller_name: name,
+                    controller_email: email,
+                    start_reg: start,
+                    end_reg: end
+                });
+
+                // 2. Handle User record (Invite system)
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const snap = await getDocs(q);
+
+                if(snap.empty) {
+                    const tempId = `TEMP_${Date.now()}`;
+                    await setDoc(doc(db, "users", tempId), {
+                        email: email,
+                        name: name,
+                        role: "staff",
+                        dept_code: selectedDept,
+                        reg_start: start,
+                        reg_end: end,
+                        isLinked: false,
+                        createdAt: serverTimestamp()
+                    });
+                }
+
+                alert("Staff assigned successfully!");
+                closeModals();
+                initBatches();
+            } catch (e) { alert(e.message); }
+        };
+
+        window.addNewBatch = async () => {
+            const year = document.getElementById('newYear').value;
+            const cat = document.getElementById('newCategory').value;
+            if(!year) return;
+
+            const title = `${year} Batch ${cat.toUpperCase()}`;
+            const customId = `${selectedDept}_${title.replace(/\s+/g, '_')}`;
+
+            await setDoc(doc(db, "batches", customId), {
+                title, category: cat, year, dept_code: selectedDept,
+                controller_name: "", controller_email: "",
+                start_reg: null, end_reg: null
+            });
+            closeModals();
+            initBatches();
+        };
+
+        window.deleteBatch = async (id, btn) => {
+            if(confirm("Delete batch?")) {
+                await deleteDoc(doc(db, "batches", id));
+                initBatches();
+            }
+        };
+
+        window.clearAssignment = async () => {
+            if(confirm("Clear staff?")) {
+                await updateDoc(doc(db, "batches", window.currentBatchId), {
+                    controller_name: "", controller_email: "",
+                    start_reg: null, end_reg: null
+                });
+                closeModals();
+                initBatches();
+            }
+        };
+
+        window.toggleBatch = (id) => {
+            const el = document.getElementById(id);
+            el.style.display = (el.style.display === 'grid') ? 'none' : 'grid';
+        };
+        window.closeModals = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        window.openCreateModal = () => document.getElementById('createModal').style.display = 'flex';
+        
+        document.getElementById('staffEmail').addEventListener('blur', (e) => window.updateAssignUI(e.target.value));
+
+        initBatches();
+    </script>
+</body>
+</html>

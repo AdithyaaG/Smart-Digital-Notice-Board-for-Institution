@@ -13,7 +13,6 @@ async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
-
     const statusText = document.getElementById('edit-upload-status');
     if (statusText) statusText.style.display = 'block';
 
@@ -28,7 +27,6 @@ async function uploadToCloudinary(file) {
         return { url: data.secure_url, type: data.resource_type };
     } catch (error) {
         console.error("Cloudinary Error:", error);
-        if (statusText) statusText.style.display = 'none';
         return null;
     }
 }
@@ -54,23 +52,29 @@ auth.onAuthStateChanged((user) => {
             snapshot.forEach((snapDoc) => {
                 const data = snapDoc.data();
                 const noticeId = snapDoc.id;
+                
+                const isEvent = data.priority?.toLowerCase().includes('event');
+                const accentColor = isEvent ? "#ff9800" : "#1a237e";
+                
                 const now = new Date();
                 const expiryDate = data.expiresAt?.toDate ? data.expiresAt.toDate() : (data.expiresAt ? new Date(data.expiresAt) : null);
                 const isExpired = expiryDate && expiryDate <= now;
 
                 const card = `
-                    <div class="notice-item" style="border-left: 5px solid ${isExpired ? '#999' : '#b3004b'}; opacity: ${isExpired ? '0.8' : '1'};">
+                    <div class="notice-item" style="border-left: 6px solid ${isExpired ? '#999' : accentColor}; opacity: ${isExpired ? '0.8' : '1'};">
                         <div class="notice-info" onclick="window.location.href='staff_analytics.html?id=${noticeId}'" style="flex:1; cursor:pointer;">
-                            <h4 style="color: ${isExpired ? '#666' : '#333'};">
-                                ${data.title} ${data.attachmentUrl ? '<i class="fas fa-paperclip" style="font-size:0.7rem; color:#aaa;"></i>' : ''}
+                            <h4 style="color: ${isExpired ? '#666' : accentColor};">
+                                ${isEvent ? '<i class="fas fa-calendar-alt"></i> ' : ''}${data.title} 
+                                ${data.attachmentUrl ? '<i class="fas fa-paperclip" style="font-size:0.7rem; color:#aaa;"></i>' : ''}
                             </h4>
-                            <p>Target: ${data.targetCode} | <span style="color:#b3004b;">View Stats <i class="fas fa-chart-line"></i></span></p>
+                            <p>Target: ${data.targetCode} | <span style="color:${accentColor};">View Stats <i class="fas fa-chart-line"></i></span></p>
+                            ${data.event_date && isEvent ? `<small style="color:#ff9800; font-weight:bold;">Event Date: ${data.event_date}</small>` : ''}
                         </div>
                         <div style="display:flex; gap:8px; margin-left: 15px;">
-                            <button onclick="openEditModal('${noticeId}')" style="background:#4CAF50; color:white; border:none; width:38px; height:38px; border-radius:8px; cursor:pointer;">
+                            <button onclick="openEditModal('${noticeId}')" style="background:#e8f5e9; color:#2e7d32; border:none; width:38px; height:38px; border-radius:8px; cursor:pointer;">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="confirmDelete('${noticeId}')" style="background:#ff4d4d; color:white; border:none; width:38px; height:38px; border-radius:8px; cursor:pointer;">
+                            <button onclick="confirmDelete('${noticeId}')" style="background:#ffebee; color:#c62828; border:none; width:38px; height:38px; border-radius:8px; cursor:pointer;">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -83,18 +87,44 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// --- OPEN MODAL ---
+// --- OPEN MODAL (Logic for Event Date Visibility) ---
 window.openEditModal = async function(id) {
     const modal = document.getElementById('edit-modal');
+    const headerBg = document.getElementById('modal-header-bg');
+    const saveBtn = document.getElementById('save-edit-btn');
+    const eventRow = document.getElementById('edit-event-row');
+    
     try {
         const snap = await getDoc(doc(db, "notices", id));
         if (snap.exists()) {
             const data = snap.data();
+            const isEvent = data.priority?.toLowerCase().includes('event');
+
+            // Apply Theme UI
+            const themeColor = isEvent ? "#ff9800" : "#1a237e";
+            if(headerBg) headerBg.style.background = themeColor;
+            if(saveBtn) saveBtn.style.background = themeColor;
+            
+            const titleLabel = document.getElementById('label-title');
+            const contentLabel = document.getElementById('label-content');
+            if(titleLabel) titleLabel.style.color = themeColor;
+            if(contentLabel) contentLabel.style.color = themeColor;
+
+            // Fill Data
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-title').value = data.title;
             document.getElementById('edit-content').value = data.content;
-            document.getElementById('edit-target').value = data.targetCode;
 
+            // Priority Check: Show/Hide Event Date input
+            if (isEvent) {
+                eventRow.style.display = 'block';
+                document.getElementById('edit-event-date').value = data.event_date || "";
+            } else {
+                eventRow.style.display = 'none';
+                document.getElementById('edit-event-date').value = ""; // Clear if not an event
+            }
+
+            // Expiry Date Logic
             if (data.expiresAt) {
                 const date = data.expiresAt.toDate();
                 document.getElementById('edit-expiry').value = date.toISOString().slice(0, 16);
@@ -112,9 +142,11 @@ window.saveEdit = async function() {
     const id = document.getElementById('edit-id').value;
     const title = document.getElementById('edit-title').value;
     const content = document.getElementById('edit-content').value;
+    const eventDate = document.getElementById('edit-event-date').value;
     const expiryValue = document.getElementById('edit-expiry').value;
     const fileInput = document.getElementById('edit-file-input');
     const saveBtn = document.getElementById('save-edit-btn');
+    const eventRow = document.getElementById('edit-event-row');
 
     try {
         if (saveBtn) {
@@ -125,6 +157,8 @@ window.saveEdit = async function() {
         const updateData = {
             title: title,
             content: content,
+            // Only save event_date if the row is currently visible (is an event)
+            event_date: eventRow.style.display === 'block' ? eventDate : null,
             lastEditedAt: serverTimestamp()
         };
 
@@ -136,11 +170,7 @@ window.saveEdit = async function() {
             }
         }
 
-        if (expiryValue) {
-            updateData.expiresAt = Timestamp.fromDate(new Date(expiryValue));
-        } else {
-            updateData.expiresAt = null; 
-        }
+        updateData.expiresAt = expiryValue ? Timestamp.fromDate(new Date(expiryValue)) : null;
 
         await updateDoc(doc(db, "notices", id), updateData);
         document.getElementById('edit-modal').style.display = 'none';
@@ -157,25 +187,15 @@ window.saveEdit = async function() {
     }
 };
 
-// --- CORRECTED DELETE FUNCTION ---
-// This function now attempts to clear the subcollection so the doc fully disappears from Console
 window.confirmDelete = async function(id) {
     if (confirm("Permanently delete this notice and all view data?")) {
         try {
-            // 1. Delete all documents in the 'views' subcollection first
             const viewsCol = collection(db, "notices", id, "views");
             const viewsSnap = await getDocs(viewsCol);
-            
             const deletePromises = viewsSnap.docs.map(vDoc => deleteDoc(vDoc.ref));
             await Promise.all(deletePromises);
-
-            // 2. Finally delete the notice document itself
             await deleteDoc(doc(db, "notices", id));
-            
-            alert("Notice and analytics deleted successfully.");
-        } catch (err) { 
-            console.error("Delete Error:", err);
-            alert("Delete failed: " + err.message); 
-        }
+            alert("Deleted successfully.");
+        } catch (err) { alert("Delete failed: " + err.message); }
     }
 };

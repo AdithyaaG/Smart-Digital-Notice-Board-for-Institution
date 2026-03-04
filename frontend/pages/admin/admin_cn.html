@@ -44,7 +44,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* --- Refined Settings Area --- */
+        /* --- Settings Area --- */
         .settings-container {
             background: white;
             margin: 15px;
@@ -81,7 +81,7 @@
             box-sizing: border-box;
         }
 
-        /* --- The "Paper" Textarea Area --- */
+        /* --- Main Card --- */
         .main-card {
             background: white;
             margin: 15px;
@@ -107,6 +107,67 @@
             color: var(--text-main);
         }
 
+        /* --- MULTI-ATTACHMENT PREVIEW AREA --- */
+        #attachment-preview-area {
+            display: none;
+            padding: 15px 25px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Grid layout for multiple images */
+        #preview-render-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            width: 100%;
+        }
+
+        .preview-item {
+            position: relative;
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+
+        .preview-item img, .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pdf-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 0.6rem;
+            color: #333;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .remove-btn {
+            background: #ffebee;
+            border: none;
+            color: #d32f2f;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
         .content-area {
             padding: 20px 25px;
             min-height: 350px;
@@ -121,26 +182,16 @@
             line-height: 1.6;
             outline: none;
             color: #555;
-            font-family: 'Courier New', Courier, monospace; /* For that document feel */
+            font-family: 'Inter', sans-serif;
         }
 
-        /* --- Conditional Display --- */
-        #eventDateGroup {
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
+        #eventDateGroup { display: none; }
 
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- Floating Attachment Button --- */
         .attachment-fab {
             position: fixed;
             right: 25px;
             bottom: 100px;
-            background: #2d3e91; /* Matches your reference image blue */
+            background: #2d3e91;
             color: white;
             width: 56px;
             height: 56px;
@@ -193,6 +244,15 @@
         <div class="heading-area">
             <input type="text" id="noticeTitle" class="title-field" placeholder="Notice Heading...">
         </div>
+
+        <div id="attachment-preview-area">
+            <div class="preview-header">
+                <span id="file-count" style="font-size: 0.7rem; font-weight: 800; color: #888; text-transform: uppercase;">0 Files Selected</span>
+                <button type="button" class="remove-btn" onclick="removeAttachment()"><i class="fas fa-trash"></i> Clear All</button>
+            </div>
+            <div id="preview-render-box"></div>
+        </div>
+
         <div class="content-area">
             <textarea class="notice-textarea" id="noticeContent" placeholder="Write the details here..."></textarea>
         </div>
@@ -201,7 +261,7 @@
     <label for="file-input" class="attachment-fab">
         <i class="fas fa-paperclip"></i>
     </label>
-    <input type="file" id="file-input" hidden>
+    <input type="file" id="file-input" accept="image/*,video/*,application/pdf" multiple hidden>
 
     <div class="bottom-nav-spacer"></div>
 
@@ -219,11 +279,51 @@
             dateGroup.style.display = (select.value === 'event') ? 'flex' : 'none';
         }
 
-        // Initialize on load
+        const fileInput = document.getElementById('file-input');
+        const previewArea = document.getElementById('attachment-preview-area');
+        const renderBox = document.getElementById('preview-render-box');
+        const fileCountText = document.getElementById('file-count');
+
+        // Logic for multiple file previews
+        fileInput.addEventListener('change', function() {
+            const files = Array.from(this.files);
+            
+            if (files.length > 0) {
+                previewArea.style.display = 'block';
+                renderBox.innerHTML = ''; 
+                fileCountText.innerText = `${files.length} Files Selected`;
+
+                files.forEach(file => {
+                    const fileUrl = URL.createObjectURL(file);
+                    const item = document.createElement('div');
+                    item.className = 'preview-item';
+
+                    if (file.type.startsWith('image/')) {
+                        item.innerHTML = `<img src="${fileUrl}">`;
+                    } else if (file.type.startsWith('video/')) {
+                        item.innerHTML = `<video src="${fileUrl}"></video>`;
+                    } else if (file.type === 'application/pdf') {
+                        item.innerHTML = `
+                            <div class="pdf-preview">
+                                <i class="fas fa-file-pdf" style="font-size: 1.5rem; color: #f44336;"></i>
+                                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 90%;">${file.name}</div>
+                            </div>`;
+                    }
+                    renderBox.appendChild(item);
+                });
+            }
+        });
+
+        function removeAttachment() {
+            fileInput.value = "";
+            previewArea.style.display = "none";
+            renderBox.innerHTML = "";
+            fileCountText.innerText = "0 Files Selected";
+        }
+
         window.onload = checkEventType;
     </script>
     <script type="module" src="../../js/post_script.js"></script>
     <script type="module" src="../../js/profile_handler.js"></script>
-
 </body>
 </html>

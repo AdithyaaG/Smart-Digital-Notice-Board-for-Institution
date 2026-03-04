@@ -7,25 +7,62 @@
     <link rel="stylesheet" href="../../css/role.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #1a237e; --accent: #e8eaf6; --text: #333; --shadow: 0 4px 15px rgba(0,0,0,0.1); --danger: #ff4d4d; --edit: #2196F3; }
+        /* Updated :root to ensure primary is #1a237e */
+        :root { 
+            --primary: #1a237e; 
+            --accent: #e8eaf6; 
+            --text: #333; 
+            --shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            --danger: #1a237e; 
+            --edit: #2196F3; 
+        }
+
         body { background-color: #f9f9f9; font-family: 'Segoe UI', sans-serif; margin: 0; }
-        .admin-header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 20px 20px; }
+
+        /* Header styling using Primary Color */
+        .admin-header { 
+            background: #1a237e; 
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-radius: 0 0 20px 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
         .admin-container { padding: 20px 15px 100px; max-width: 700px; margin: auto; }
         .management-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .category-label { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         .category-label::before { content: ''; width: 4px; height: 18px; background: var(--primary); border-radius: 10px; }
         
-        .dept-card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); transition: 0.3s; }
-        .dept-info { display: flex; align-items: center; gap: 15px; }
-        .dept-icon { background: var(--accent); color: var(--primary); padding: 12px; border-radius: 12px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-        
+        .dept-card { background: white; border-radius: 15px; padding: 18px; margin-bottom: 12px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); }
+        .dept-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .staff-list-preview { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+        .staff-chip { background: var(--accent); color: var(--primary); font-size: 0.75rem; padding: 4px 10px; border-radius: 15px; font-weight: 600; }
+
         .action-btns { display: flex; gap: 8px; }
-        .delete-btn { background: var(--danger); color: white; border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .edit-btn { background: var(--edit); color: white; border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .delete-btn:hover, .edit-btn:hover { transform: scale(1.1); }
+        .delete-btn, .edit-btn { border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
+        .delete-btn { background: var(--danger); }
+        .edit-btn { background: var(--edit); }
+
+        /* Bottom Nav - Corrected to use Primary Color instead of Orange */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--primary);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-radius: 20px 20px 0 0;
+            z-index: 1000;
+        }
+        .nav-item { color: rgba(255,255,255,0.6); font-size: 1.4rem; text-decoration: none; transition: 0.3s; }
+        .nav-item.active { color: white; transform: translateY(-5px); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; width: 100%; max-width: 380px; padding: 25px; border-radius: 20px; position: relative; }
+        .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
         .input-field { width: 100%; padding: 12px; margin: 6px 0 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 0.9rem; }
         .input-label { font-size: 0.75rem; font-weight: 600; color: #666; margin-left: 5px; }
         .btn-confirm { background: var(--primary); color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
@@ -33,196 +70,162 @@
 </head>
 <body>
 
-    <header class="admin-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="../../assets/logo.png" alt="SR-Notify Logo" id="header-logo" style="height: 50px;">
-        <div class="header-text">
-            <h2 style="margin: 0; color: white;">SR-Notify</h2>
-            <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Admin Dashboard</p>
+    <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="../../assets/logo.png" alt="Logo" style="height: 50px;">
+            <div>
+                <h2 style="margin: 0;">SR-Notify</h2>
+                <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">Admin Management</p>
+            </div>
         </div>
-    </div>
-    
-
-    <a href="admin_profile.html" class="top-profile-link" style="text-decoration: none;">
-        <div id="profile-container" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2);">
-            <img id="user-header-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-            <i id="user-header-icon" class="fas fa-user-circle" style="font-size: 2rem; color: white;"></i>
-        </div>
-    </a>
-
+        <a href="admin_profile.html" style="color: white;"><i class="fas fa-user-circle" style="font-size: 2rem;"></i></a>
     </header>
 
     <main class="admin-container">
         <div class="management-bar">
-            <div class="category-label">Active Departments</div>
-            <button style="background:var(--primary); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;" onclick="openCreateModal()"><i class="fas fa-plus"></i> New Dept</button>
+            <div class="category-label">Department & Staff Access</div>
+            <button onclick="openCreateModal()" style="background:var(--primary); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;">
+                <i class="fas fa-plus"></i> Add New
+            </button>
         </div>
         <div id="deptListContainer"></div>
     </main>
 
     <div id="deptModal" class="modal">
         <div class="modal-content">
-            <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 15px;">Add New Department</h3>
+            <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 15px;">Register Department</h3>
             <input type="hidden" id="editDocId">
             
             <div class="input-label">Department Name</div>
             <input type="text" id="deptName" class="input-field" placeholder="Information Technology">
             
-            <div class="input-label">Department Email</div>
-            <input type="email" id="deptEmail" class="input-field" placeholder="it@srcas.ac.in">
-            
-            <div class="input-label">Dept Code</div>
+            <div class="input-label">Department Code</div>
             <input type="text" id="deptCode" class="input-field" placeholder="107">
 
-            <button class="btn-confirm" id="saveBtn" onclick="saveDept()">Register Department</button>
+            <div style="background: #f0f2f5; padding: 12px; border-radius: 12px; margin-bottom: 10px;">
+                <div class="input-label">Staff Names (comma separated)</div>
+                <input type="text" id="staffNames" class="input-field" placeholder="ram, leela, mohan">
+                
+                <div class="input-label">Staff Emails (comma separated)</div>
+                <textarea id="staffEmails" class="input-field" rows="3" placeholder="ram@email.com, leela@email.com, mohan@email.com"></textarea>
+                <small style="color: #666; font-size: 0.7rem;">Note: Keep names and emails in matching order.</small>
+            </div>
+
+            <button class="btn-confirm" onclick="saveDept()">Save Department</button>
             <button onclick="closeModals()" style="background:none; border:none; width:100%; margin-top:10px; cursor:pointer; color: #999;">Cancel</button>
         </div>
     </div>
 
-
-     <nav class="bottom-nav">
-        <a href="admin_dept_manage.html" class="nav-item"><i class="fas fa-tasks"></i></a>
+    <nav class="bottom-nav">
+        <a href="admin_dept_manage.html" class="nav-item active"><i class="fas fa-tasks"></i></a>
         <a href="admin_home.html" class="nav-item"><i class="fas fa-home"></i></a>
-        <a href="admin_cn.html" class="nav-item active"><i class="fas fa-plus-square"></i></a>
+        <a href="admin_cn.html" class="nav-item"><i class="fas fa-plus-square"></i></a>
         <a href="admin_notice.html" class="nav-item"><i class="fas fa-clipboard-list"></i></a>
     </nav>
 
     <script type="module">
-    import { db } from "../../js/firebase-config.js"; 
-    import { collection, query, where, getDocs, doc, setDoc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "../../js/firebase-config.js"; 
+        import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- LOAD DEPARTMENTS ---
-    async function loadDepartments() {
-        const container = document.getElementById('deptListContainer');
-        container.innerHTML = `<p style="text-align:center; color:#999;">Loading authorized departments...</p>`;
-
-        try {
-            const q = query(collection(db, "users"), where("role", "==", "dept"));
-            const snap = await getDocs(q);
-            container.innerHTML = "";
-
-            if(snap.empty) {
-                container.innerHTML = `<p style="text-align:center; color:#999;">No departments authorized yet.</p>`;
-                return;
-            }
-
-            snap.forEach(docSnap => {
-                const d = docSnap.data();
-                const isLinked = d.isLinked === true;
-                const card = document.createElement('div');
-                card.className = 'dept-card';
-                
-                // We escape the data to prevent JSON errors in the onclick attribute
-                const dataString = JSON.stringify(d).replace(/'/g, "&apos;");
-
-                card.innerHTML = `
-                    <div class="dept-info">
-                        <div class="dept-icon" style="background: ${isLinked ? '#e8f5e9' : 'var(--accent)'}">
-                            <i class="fas ${isLinked ? 'fa-check-circle' : 'fa-building'}" style="color: ${isLinked ? '#2e7d32' : 'var(--primary)'}"></i>
-                        </div>
-                        <div>
-                            <strong style="display:block;">${d.name}</strong>
-                            <small style="color:#666;">${d.email} | Code: ${d.dept_code}</small>
-                            <div style="font-size: 10px; margin-top: 4px; color: ${isLinked ? '#2e7d32' : '#f57c00'}">
-                                ${isLinked ? '● Fully Registered' : '○ Awaiting HOD Login (Whitelisted)'}
+        async function loadDepartments() {
+            const container = document.getElementById('deptListContainer');
+            container.innerHTML = `<p style="text-align:center; color:#999;">Fetching records...</p>`;
+            try {
+                const snap = await getDocs(collection(db, "departments"));
+                container.innerHTML = "";
+                if(snap.empty) {
+                    container.innerHTML = `<p style="text-align:center; color:#999;">No departments found.</p>`;
+                    return;
+                }
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'dept-card';
+                    
+                    const staffChips = d.staffs ? d.staffs.map(s => `<span class="staff-chip">${s}</span>`).join('') : '';
+                    
+                    card.innerHTML = `
+                        <div class="dept-header">
+                            <div onclick="window.location.href='admin_manage_staff.html?dept=${d.deptCode}'" style="cursor:pointer; flex-grow:1;">
+                                <strong style="display:block; font-size:1.1rem; color:var(--primary);">${d.deptName}</strong>
+                                <small style="color:#666;">Code: ${d.deptCode} • <span style="color:var(--edit);">View Batches <i class="fas fa-external-link-alt" style="font-size:0.7rem;"></i></span></small>
+                            </div>
+                            <div class="action-btns">
+                                <button class="edit-btn" title="Edit Department" onclick='window.openEditModal("${docSnap.id}", ${JSON.stringify(d).replace(/'/g, "&apos;")})'><i class="fas fa-edit"></i></button>
+                                <button class="delete-btn" title="Delete" onclick="window.deleteDept('${docSnap.id}')"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
-                    </div>
-                    <div class="action-btns">
-                        <button class="edit-btn" onclick='window.openEditModal("${docSnap.id}", ${dataString})'>
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-btn" onclick="window.deleteDept('${docSnap.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        } catch (err) { console.error("Load Error:", err); }
-    }
-
-    // --- ATTACH FUNCTIONS TO WINDOW (Crucial for onclick to work) ---
-
-    window.openCreateModal = () => {
-        document.getElementById('modalTitle').innerText = "Add New Department";
-        document.getElementById('editDocId').value = "";
-        document.getElementById('deptName').value = "";
-        document.getElementById('deptEmail').value = "";
-        document.getElementById('deptCode').value = "";
-        document.getElementById('saveBtn').innerText = "Register Department";
-        document.getElementById('deptModal').style.display = 'flex';
-    };
-
-    window.openEditModal = (id, data) => {
-        document.getElementById('modalTitle').innerText = "Edit Department";
-        document.getElementById('editDocId').value = id;
-        document.getElementById('deptName').value = data.name;
-        document.getElementById('deptEmail').value = data.email;
-        document.getElementById('deptCode').value = data.dept_code;
-        document.getElementById('saveBtn').innerText = "Update Department";
-        document.getElementById('deptModal').style.display = 'flex';
-    };
-
-    window.closeModals = () => {
-        document.getElementById('deptModal').style.display = 'none';
-    };
-
-    window.saveDept = async () => {
-        const name = document.getElementById('deptName').value.trim();
-        const email = document.getElementById('deptEmail').value.trim().toLowerCase();
-        const code = document.getElementById('deptCode').value.trim();
-        const editId = document.getElementById('editDocId').value;
-
-        if(!name || !email || !code) return alert("Please fill all fields!");
-
-        try {
-            const usersRef = collection(db, "users");
-            const qEmail = query(usersRef, where("email", "==", email));
-            const qCode = query(usersRef, where("dept_code", "==", code));
-
-            const [snapEmail, snapCode] = await Promise.all([getDocs(qEmail), getDocs(qCode)]);
-
-            const isDuplicate = (snap) => snap.docs.some(d => d.id !== editId);
-
-            if (isDuplicate(snapEmail)) return alert("This email is already authorized for another department.");
-            if (isDuplicate(snapCode)) return alert("This Department Code is already in use.");
-
-            if (editId) {
-                await updateDoc(doc(db, "users", editId), {
-                    name, email, dept_code: code
+                        <div class="staff-list-preview" onclick="window.location.href='admin_manage_staff.html?dept=${d.deptCode}'" style="cursor:pointer;">
+                            ${staffChips}
+                        </div>
+                    `;
+                    container.appendChild(card);
                 });
-                alert("Authorization updated.");
-            } else {
-                const docId = `WHITELIST_DEPT_${code}`;
-                await setDoc(doc(db, "users", docId), {
-                    name, 
-                    email, 
-                    dept_code: code,
-                    role: "dept",
-                    isLinked: false,
-                    createdAt: serverTimestamp()
-                });
-                alert("Department Whitelisted successfully!");
-            }
+            } catch (err) { console.error("Load Error:", err); }
+        }
+
+        window.openCreateModal = () => {
+            document.getElementById('modalTitle').innerText = "Add Department";
+            document.getElementById('editDocId').value = "";
+            document.getElementById('deptName').value = "";
+            document.getElementById('deptCode').value = "";
+            document.getElementById('staffNames').value = "";
+            document.getElementById('staffEmails').value = "";
+            document.getElementById('deptModal').style.display = 'flex';
+        };
+
+        window.openEditModal = (id, data) => {
+            document.getElementById('modalTitle').innerText = "Edit Department";
+            document.getElementById('editDocId').value = id;
+            document.getElementById('deptName').value = data.deptName;
+            document.getElementById('deptCode').value = data.deptCode;
+            document.getElementById('staffNames').value = data.staffs ? data.staffs.join(', ') : "";
+            document.getElementById('staffEmails').value = data.staffEmails ? data.staffEmails.join(', ') : "";
+            document.getElementById('deptModal').style.display = 'flex';
+        };
+
+        window.closeModals = () => { document.getElementById('deptModal').style.display = 'none'; };
+
+        window.saveDept = async () => {
+            const name = document.getElementById('deptName').value.trim();
+            const code = document.getElementById('deptCode').value.trim();
+            const editId = document.getElementById('editDocId').value;
             
-            window.closeModals();
-            loadDepartments();
-        } catch (e) { alert("Error: " + e.message); }
-    };
+            const staffArr = document.getElementById('staffNames').value.split(',').map(s => s.trim()).filter(s => s !== "");
+            const emailArr = document.getElementById('staffEmails').value.split(',').map(s => s.trim().toLowerCase()).filter(s => s !== "");
 
-    window.deleteDept = async (id) => {
-        if(!confirm("Are you sure? This will revoke all access for this department HOD.")) return;
-        try {
-            await deleteDoc(doc(db, "users", id));
-            loadDepartments();
-        } catch (e) { alert("Error: " + e.message); }
-    };
+            if(!name || !code) return alert("Please fill Name and Code!");
+            
+            try {
+                const deptObj = {
+                    deptName: name,
+                    deptCode: code,
+                    staffs: staffArr,
+                    staffEmails: emailArr,
+                    updatedAt: serverTimestamp()
+                };
 
-    // Initialize
-    loadDepartments();
-</script>
-   
-   <script  src="../../js/profile_handler.js"></script>
+                if (editId) {
+                    await updateDoc(doc(db, "departments", editId), deptObj);
+                } else {
+                    await setDoc(doc(db, "departments", code), { ...deptObj, createdAt: serverTimestamp() });
+                }
+                
+                alert("Saved successfully!");
+                closeModals();
+                loadDepartments();
+            } catch (e) { alert("Error: " + e.message); }
+        };
+
+        window.deleteDept = async (id) => {
+            if(!confirm("Delete this department? All staff links will be lost.")) return;
+            try {
+                await deleteDoc(doc(db, "departments", id));
+                loadDepartments();
+            } catch (e) { alert("Error: " + e.message); }
+        };
+
+        loadDepartments();
+    </script>
 </body>
 </html>

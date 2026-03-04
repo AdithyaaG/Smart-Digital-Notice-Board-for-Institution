@@ -51,52 +51,40 @@
         <p style="text-align: center; color: #999;">Loading your notices...</p>
     </main>
 
-    <div id="edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;">
-        <div style="background:white; padding:30px; border-radius:20px; width:95%; max-width:450px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; overflow: hidden;">
-            
-            <div style="background: #1a237e; margin: -30px -30px 25px -30px; padding: 20px; text-align: center;">
-                <h3 style="color:white; margin:0; font-family: sans-serif; letter-spacing: 1px;"><i class="fas fa-edit"></i> EDIT NOTICE</h3>
-            </div>
+   <div id="edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;">
+    <div style="background:white; padding:30px; border-radius:24px; width:95%; max-width:450px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; overflow: hidden;">
+        
+        <div id="modal-header-bg" style="background: #1a237e; margin: -30px -30px 25px -30px; padding: 25px; text-align: center;">
+            <h3 style="color:white; margin:0; font-family: sans-serif; letter-spacing: 1px;"><i class="fas fa-edit"></i> EDIT NOTICE</h3>
+        </div>
 
-            <input type="hidden" id="edit-id">
+        <input type="hidden" id="edit-id">
 
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; font-size: 0.8rem; font-weight: bold; color: #1a237e; margin-bottom: 5px;">Notice Title</label>
-                <input type="text" id="edit-title" style="width:100%; padding:10px; border:2px solid #f0f0f0; border-radius:10px; outline:none; box-sizing: border-box;">
-            </div>
+        <div style="margin-bottom: 15px;">
+            <label id="label-title" style="display:block; font-size: 0.85rem; font-weight: bold; color: #1a237e; margin-bottom: 5px;">Notice Title</label>
+            <input type="text" id="edit-title" style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:12px; outline:none; box-sizing: border-box;">
+        </div>
 
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; font-size: 0.8rem; font-weight: bold; color: #1a237e; margin-bottom: 5px;">Content Description</label>
-                <textarea id="edit-content" style="width:100%; padding:10px; border:2px solid #f0f0f0; border-radius:10px; outline:none; height:100px; box-sizing: border-box; resize: none;"></textarea>
-            </div>
+        <div id="edit-event-row" style="margin-bottom: 15px; display: none;">
+            <label style="display:block; font-size: 0.85rem; font-weight: bold; color: #ff9800; margin-bottom: 5px;"><i class="fas fa-calendar-day"></i> Event Date</label>
+            <input type="date" id="edit-event-date" style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:12px; outline:none; box-sizing: border-box;">
+        </div>
 
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; font-size: 0.8rem; font-weight: bold; color: #1a237e; margin-bottom: 5px;"><i class="fas fa-clock"></i> Edit Expiry Date & Time</label>
-                <input type="datetime-local" id="edit-expiry" style="width:100%; padding:10px; border:2px solid #f0f0f0; border-radius:10px; outline:none; box-sizing: border-box;">
-                <small style="color: #999; font-size: 0.7rem;">Leave empty to make it permanent.</small>
-            </div>
+        <div style="margin-bottom: 15px;">
+            <label id="label-content" style="display:block; font-size: 0.85rem; font-weight: bold; color: #1a237e; margin-bottom: 5px;">Description</label>
+            <textarea id="edit-content" style="width:100%; padding:12px; border:2px solid #f0f0f0; border-radius:12px; outline:none; height:100px; box-sizing: border-box; resize: none;"></textarea>
+        </div>
 
-            <div style="margin-bottom: 25px;">
-                <label style="display:block; font-size: 0.8rem; font-weight: bold; color: #1a237e; margin-bottom: 5px;">Target Class/Code (Locked)</label>
-                <input type="text" id="edit-target" disabled style="width:100%; padding:10px; border:2px solid #f0f0f0; border-radius:10px; background-color: #f9f9f9; color: #999; cursor: not-allowed;">
-            </div>
-
-            <div style="margin-top:10px;">
-            <label style="font-size:0.8rem; font-weight:bold; color:#1a237e;">Change Attachment (Optional):</label>
-            <input type="file" id="edit-file-input" accept="image/*,video/*" style="width:100%; margin-top:5px;">
-            <div id="edit-upload-status" style="display:none; color:#1a237e; font-size:0.75rem;">Uploading new media...</div>
-            </div>
-
-            <div style="display:flex; gap:12px;">
-                <button id="save-edit-btn" onclick="saveEdit()" style="flex:2; background:#1a237e; color:white; border:none; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <div style="display:flex; gap:12px; margin-top: 20px;">
+            <button id="save-edit-btn" onclick="saveEdit()" style="flex:2; background:#1a237e; color:white; border:none; padding:15px; border-radius:14px; font-weight:bold; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="fas fa-check-circle"></i> Save Changes
             </button>
-                <button onclick="document.getElementById('edit-modal').style.display='none'" style="flex:1; background:#f5f5f5; color:#666; border:none; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer;">
-                    Cancel
-                </button>
-            </div>
+            <button onclick="document.getElementById('edit-modal').style.display='none'" style="flex:1; background:#f5f5f5; color:#666; border:none; padding:15px; border-radius:14px; font-weight:bold; cursor:pointer;">
+                Cancel
+            </button>
         </div>
     </div>
+</div>
 
     <script type="module" src="../../js/staff_manage.js"></script>
     <script type="module" src="../../js/profile_handler.js"></script>

@@ -1,15 +1,24 @@
 import { db, auth } from './firebase-config.js';
-import { collection, addDoc, getDocs, query, where, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+    collection, 
+    addDoc, 
+    getDocs, 
+    query, 
+    where, 
+    serverTimestamp, 
+    Timestamp 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const CLOUD_NAME = "dfie8haie"; 
 const UPLOAD_PRESET = "sr_notices"; 
+
+// Initialize the target mode (Default to class)
+window.currentTargetMode = 'class';
 
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
-    const statusText = document.getElementById('upload-status');
-    if (statusText) statusText.style.display = 'block';
 
     try {
         const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
@@ -18,111 +27,129 @@ async function uploadToCloudinary(file) {
         });
         if (!response.ok) throw new Error('Media upload failed');
         const data = await response.json();
-        if (statusText) statusText.style.display = 'none';
         return { url: data.secure_url, type: data.resource_type };
     } catch (error) {
         console.error("Cloudinary Error:", error);
-        if (statusText) statusText.style.display = 'none';
         return null;
     }
 }
 
+async function loadDeptBatches() {
+    const deptCode = localStorage.getItem("userDept");
+    const batchListDiv = document.getElementById('batchCheckboxList');
+    if (!deptCode || !batchListDiv) return;
+
+    try {
+        const q = query(collection(db, "batches"), where("deptCode", "==", deptCode));
+        const querySnap = await getDocs(q);
+        batchListDiv.innerHTML = ""; 
+        querySnap.forEach((docSnap) => {
+            const batch = docSnap.data();
+            batchListDiv.innerHTML += `
+                <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 8px; background: #f0f2f5; padding: 8px; border-radius: 8px;">
+                    <input type="checkbox" name="selectedBatches" value="${docSnap.id}" 
+                           data-start="${batch.start_reg}" data-end="${batch.end_reg}"> 
+                    ${batch.name || docSnap.id}
+                </label>
+            `;
+        });
+    } catch (err) { console.error("Error loading batches:", err); }
+}
+loadDeptBatches();
+
 window.publishStaffNotice = async function() {
-    const title = document.getElementById('noticeTitle').value;
-    const content = document.getElementById('noticeContent').value;
+    const title = document.getElementById('noticeTitle').value.trim();
+    const content = document.getElementById('noticeContent').value.trim();
     const priority = document.getElementById('noticePriority').value; 
     const eventDateInput = document.getElementById('eventDate').value; 
     const expiryInput = document.getElementById('expiryDate').value;
     const fileInput = document.getElementById('staff-file-input');
-    const postBtn = document.querySelector('.btn-post');
+    const postBtn = document.getElementById('publishBtn');
     
-    const classCode = localStorage.getItem("userDept"); 
+    const files = fileInput ? Array.from(fileInput.files) : [];
+    const deptCode = localStorage.getItem("userDept"); 
     const authorName = localStorage.getItem("userName");
     const authorRole = localStorage.getItem("userRole") || "staff"; 
 
-    if (!title || !content) {
-        alert("Please fill in both the title and content!");
-        return;
-    }
-
-    if ((priority === 'event' || priority === 'off_campus') && !eventDateInput) {
-        alert("Please select the Event Date to enable Auto-Highlighting!");
-        return;
-    }
+    if (!title || !content) { alert("Please fill in both the title and content!"); return; }
 
     const currentUser = auth.currentUser;
-    if (!currentUser) {
-        alert("Session expired. Please log in again.");
-        return;
+    if (!currentUser) { alert("Session expired. Please log in again."); return; }
+
+    // INITIALIZE TARGET LOGIC
+    let targetCode = deptCode; // Default to 107
+    let audienceType = window.currentTargetMode; 
+    let startReg = null;
+    let endReg = null;
+
+    // --- LOGIC SWITCH BASED ON BUTTON SELECTED ---
+    if (audienceType === 'class') {
+        // Find the batch controlled by this staff
+        const batchQuery = query(collection(db, "batches"), where("controller_email", "==", currentUser.email));
+        const batchSnap = await getDocs(batchQuery);
+        if (!batchSnap.empty) {
+            const bData = batchSnap.docs[0].data();
+            targetCode = batchSnap.docs[0].id; // e.g., "107_23_Batch"
+            startReg = Number(bData.start_reg);
+            endReg = Number(bData.end_reg);
+            audienceType = 'class';
+        } else {
+            alert("No class assigned to your email. Reverting to Department post.");
+            audienceType = 'department';
+            targetCode = deptCode;
+        }
+    } 
+    else if (audienceType === 'dept' || audienceType === 'department') {
+        audienceType = 'department'; 
+        targetCode = deptCode; // Use "107"
+        startReg = null; // Clear these so it doesn't show in class feed
+        endReg = null;
+    } 
+    else if (audienceType === 'choose') {
+        const selected = Array.from(document.querySelectorAll('input[name="selectedBatches"]:checked'));
+        if (selected.length === 0) { alert("Select at least one batch!"); return; }
+        targetCode = selected.map(cb => cb.value);
+        audienceType = "multiple_batches";
     }
 
-    // --- NEW: GENERATE WHATSAPP-STYLE TIME ---
-    const now = new Date();
-    const postedTime = now.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: true 
-    }); 
-    // Result: "10:45 AM"
-    // -----------------------------------------
-
+    const postedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
     postBtn.disabled = true;
-    postBtn.innerText = "POSTING...";
+    postBtn.innerText = "UPLOADING...";
 
     try {
-        let startReg = null;
-        let endReg = null;
-
-        const batchQuery = query(
-            collection(db, "batches"), 
-            where("controller_email", "==", currentUser.email)
-        );
-        const batchSnap = await getDocs(batchQuery);
-        
-        if (!batchSnap.empty) {
-            const batchData = batchSnap.docs[0].data();
-            startReg = Number(batchData.start_reg);
-            endReg = Number(batchData.end_reg);
+        let attachments = [];
+        for (let i = 0; i < files.length; i++) {
+            const uploaded = await uploadToCloudinary(files[i]);
+            if (uploaded) attachments.push(uploaded);
         }
 
-        let attachmentUrl = null;
-        let attachmentType = null;
-        if (fileInput.files[0]) {
-            const uploadedMedia = await uploadToCloudinary(fileInput.files[0]);
-            if (uploadedMedia) {
-                attachmentUrl = uploadedMedia.url;
-                attachmentType = uploadedMedia.type;
-            }
-        }
-
-        let finalExpiry = null;
-        if (expiryInput) {
-            finalExpiry = Timestamp.fromDate(new Date(expiryInput));
-        }
-
-        // SAVE TO FIRESTORE
-        await addDoc(collection(db, "notices"), {
-            title: title,
-            content: content,
-            priority: priority,
+        const finalNoticeData = {
+            title, 
+            content, 
+            priority, 
+            audienceType,
             event_date: eventDateInput || null,
-            postedTime: postedTime,        // <--- NEW FIELD SAVED HERE
-            authorName: authorName,
+            postedTime, 
+            authorName, 
             authorEmail: currentUser.email,
-            authorRole: authorRole,
-            targetCode: classCode, 
-            start_reg: Number(startReg), 
-            end_reg: Number(endReg),
-            attachmentUrl: attachmentUrl,
-            attachmentType: attachmentType,
+            authorRole, 
+            targetCode, 
+            deptCode,
+            start_reg: startReg, 
+            end_reg: endReg,
+            attachments, 
             createdAt: serverTimestamp(),
-            expiresAt: finalExpiry
-        });
+            expiresAt: expiryInput ? Timestamp.fromDate(new Date(expiryInput)) : null
+        };
+
+        console.log("Posting Notice Data:", finalNoticeData); // Debugging
+
+        await addDoc(collection(db, "notices"), finalNoticeData);
 
         alert("Notice published successfully!");
         window.location.href = "staff_home.html"; 
     } catch (error) {
-        console.error("Error publishing notice:", error);
+        console.error("Post Error:", error);
         alert("Error: " + error.message);
         postBtn.disabled = false;
         postBtn.innerText = "POST";
